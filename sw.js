@@ -1,16 +1,16 @@
-const CACHE_NAME = 'gymapp-cache-v3';
+const CACHE_NAME = 'gymapp-cache-v4';
 const ASSETS = [
   './',
   './index.html',
   './manifest.json',
-  './css/styles.css',
+  './css/styles.css?v=4',
   './js/vendor/chart.umd.js',
-  './js/storage.js',
-  './js/seed-exercises.js',
-  './js/exercise-picker.js',
-  './js/workouts.js',
-  './js/routines.js',
-  './js/app.js',
+  './js/storage.js?v=4',
+  './js/seed-exercises.js?v=4',
+  './js/exercise-picker.js?v=4',
+  './js/workouts.js?v=4',
+  './js/routines.js?v=4',
+  './js/app.js?v=4',
   './icons/icon.svg',
   './icons/icon-192.png',
   './icons/icon-512.png',
@@ -32,7 +32,7 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
-  if (new URL(event.request.url).origin !== self.location.origin) return; // deja pasar Open Food Facts sin interceptar
+  if (new URL(event.request.url).origin !== self.location.origin) return; // deja pasar peticiones externas sin interceptar
   event.respondWith(
     caches.match(event.request).then(cached => {
       const fetchPromise = fetch(event.request).then(networkResponse => {

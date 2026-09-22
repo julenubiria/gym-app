@@ -1,4 +1,4 @@
-const CACHE_NAME = 'gymapp-cache-v2';
+const CACHE_NAME = 'gymapp-cache-v3';
 const ASSETS = [
   './',
   './index.html',
@@ -7,10 +7,9 @@ const ASSETS = [
   './js/vendor/chart.umd.js',
   './js/storage.js',
   './js/seed-exercises.js',
-  './js/seed-foods.js',
+  './js/exercise-picker.js',
   './js/workouts.js',
   './js/routines.js',
-  './js/nutrition.js',
   './js/app.js',
   './icons/icon.svg',
   './icons/icon-192.png',

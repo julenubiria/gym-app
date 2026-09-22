@@ -1,33 +1,29 @@
 # Mi Gym App
 
-App personal (100% local) para:
+App personal de entrenamiento (100% local, sin cuentas ni servidor), inspirada en Hevy/Strong:
 
-- **Entrenamiento**: base de datos con 135 ejercicios (grupo muscular + material) tipo Hevy/Strong. Puedes crear tus propios ejercicios en cualquier momento. Crea **rutinas** (plantillas) con series/reps objetivo por ejercicio, e "Inicia" una rutina para precargar la sesión (con el peso que usaste la última vez). Historial de sesiones y gráficas de progreso (1RM estimada y volumen) por ejercicio.
-- **Nutrición**: busca alimentos en tu base local (Mercadona/Lidl precargados) **y en Open Food Facts** (base de datos real y enorme, con cientos de miles de productos) en el mismo buscador. Cada producto de Open Food Facts que uses se guarda en tu dispositivo, así que la próxima vez ya está disponible sin conexión. Registro diario por comida con objetivos de macros.
+- **135 ejercicios** precargados con grupo muscular + material, y puedes crear los tuyos en cualquier momento (también sobre la marcha, buscando y pulsando "Crear").
+- **Buscador de ejercicios**: escribe para buscar y filtra por grupo muscular con chips, tanto al registrar una sesión como al montar una rutina o ver tu progreso.
+- **Rutinas**: crea plantillas con series/reps objetivo por ejercicio. Al "Iniciar" una rutina se precarga la sesión con el peso que usaste la última vez.
+- **Historial** con tarjetas de sesión: duración, volumen total, series y **récords (PRs)** — se marca automáticamente cuando superas tu mejor 1RM estimada anterior en un ejercicio.
+- **Progreso por ejercicio**: gráfica de 1RM estimada y volumen a lo largo del tiempo.
+- **Dashboard**: racha de días seguidos entrenando, mapa de actividad de las últimas 4 semanas, y tus últimas sesiones.
 
 ## Cómo usarla en el ordenador
 
-Abre [index.html](index.html) haciendo doble clic. Todos tus datos (entrenamientos, rutinas, alimentos, registros) se guardan **solo en este navegador, en este dispositivo** (localStorage) — nunca se envían a ningún sitio. Solo la búsqueda de alimentos hace una consulta a Open Food Facts (sus servidores no reciben nada tuyo aparte del texto que buscas).
+Abre [index.html](index.html) haciendo doble clic. Todos tus datos (ejercicios, rutinas, sesiones) se guardan **solo en este dispositivo** (localStorage) — nunca se envían a ningún sitio.
 
 Hay un botón **Exportar datos** en Ajustes para hacer copias de seguridad o pasar los datos a otro dispositivo.
 
-## Notas sobre los datos nutricionales precargados
+## En el móvil
 
-Los productos de Mercadona/Lidl que vienen precargados de fábrica son valores de referencia aproximados. Los que añadas buscando en Open Food Facts son datos reales de su base de datos colaborativa (pueden tener algún error si el producto está mal etiquetado por otro usuario, como en cualquier base de datos colaborativa).
+La app está publicada como PWA instalable en:
 
-## Cómo tenerla en el móvil (PWA instalable)
+**https://julenubiria.github.io/gym-app/**
 
-Para que el móvil pueda "instalarla" de verdad (icono propio, pantalla completa, funciona sin conexión) el navegador exige que la página se sirva por **HTTPS** — abrir el archivo directamente o servirla solo en tu red local por `http://` no es suficiente para que Chrome/Android ofrezca instalarla ni para que el modo offline funcione en el móvil.
+Ábrela en Chrome desde tu Android → menú (⋮) → "Instalar app" / "Añadir a pantalla de inicio". Queda con icono propio, pantalla completa, y funciona sin conexión.
 
-La forma más sencilla y gratuita es publicar esta carpeta como página estática en un servicio con HTTPS (por ejemplo **GitHub Pages**). Sigue siendo 100% "local" en el sentido de tus datos: solo se publican los archivos de la app (HTML/CSS/JS), no hay servidor ni base de datos — tus entrenamientos y comidas se siguen quedando únicamente en el navegador de tu móvil.
-
-Pasos con GitHub Pages (gratis):
-1. Crear un repositorio en GitHub y subir esta carpeta.
-2. En el repositorio: Settings → Pages → Deploy from branch → main.
-3. GitHub te da una URL tipo `https://tuusuario.github.io/gym-app/`.
-4. Abre esa URL desde el navegador del móvil (Chrome) → menú → "Añadir a pantalla de inicio" / "Instalar app".
-
-Si prefieres no usar GitHub, cualquier otro hosting estático gratuito con HTTPS (Cloudflare Pages, Netlify) sirve igual: solo hay que subir la carpeta tal cual, no hace falta build ni backend.
+Para publicar cambios nuevos, solo hay que hacer `git push` a este mismo repositorio de GitHub; Pages se actualiza sola en 1-2 minutos.
 
 ## Probar en el PC con un servidor local
 
@@ -36,4 +32,4 @@ cd gym-app
 python -m http.server 8080
 ```
 
-Y abrir `http://localhost:8080` (en el propio PC, `localhost` sí cuenta como seguro, así que ahí puedes probar el modo offline y la instalación como app de escritorio en Chrome/Edge).
+Y abrir `http://localhost:8080`.

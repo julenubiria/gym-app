@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
 <title>Mi Gym App</title>
-<meta name="theme-color" content="#16171b">
+<meta name="theme-color" content="#0d0e12">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
@@ -16,11 +16,10 @@
 <body>
 
 <header class="topbar">
-  <div class="brand">🏋️ Mi Gym App</div>
+  <div class="brand"><span class="brand-mark">🏋️</span> Mi Gym App</div>
   <nav class="tabs" id="tabs">
     <button class="tab-btn active" data-tab="dashboard">Inicio</button>
     <button class="tab-btn" data-tab="workouts">Entrenamiento</button>
-    <button class="tab-btn" data-tab="nutrition">Nutrición</button>
     <button class="tab-btn" data-tab="settings">Ajustes</button>
   </nav>
 </header>
@@ -29,24 +28,26 @@
 
   <!-- DASHBOARD -->
   <section id="tab-dashboard" class="tab-panel active">
-    <h1>Resumen</h1>
     <div class="grid cards" id="dashboard-cards"></div>
 
     <div class="panel">
-      <h2>Últimos entrenamientos</h2>
-      <div id="dashboard-recent-workouts" class="list"></div>
+      <div class="panel-header-row">
+        <h2>Actividad</h2>
+        <span class="hint" id="streak-label"></span>
+      </div>
+      <div id="streak-heatmap" class="heatmap"></div>
     </div>
 
     <div class="panel">
-      <h2>Nutrición de hoy</h2>
-      <div id="dashboard-today-nutrition"></div>
+      <h2>Últimos entrenamientos</h2>
+      <div id="dashboard-recent-workouts" class="session-list"></div>
     </div>
   </section>
 
   <!-- WORKOUTS -->
   <section id="tab-workouts" class="tab-panel">
     <div class="subtabs">
-      <button class="subtab-btn active" data-subtab="log">Registrar sesión</button>
+      <button class="subtab-btn active" data-subtab="log">Registrar</button>
       <button class="subtab-btn" data-subtab="routines">Rutinas</button>
       <button class="subtab-btn" data-subtab="history">Historial</button>
       <button class="subtab-btn" data-subtab="progress">Progreso</button>
@@ -55,43 +56,43 @@
 
     <div id="workouts-log" class="subtab-panel active">
       <div class="panel">
-        <h2>Nueva sesión</h2>
-        <div class="form-row">
-          <label>Fecha</label>
-          <input type="date" id="workout-date">
-        </div>
-        <div class="form-row">
-          <label>Nombre de la sesión (opcional)</label>
-          <input type="text" id="workout-name" placeholder="Ej: Empuje, Pierna, Full Body...">
+        <div class="form-row-pair">
+          <div class="form-row">
+            <label>Fecha</label>
+            <input type="date" id="workout-date">
+          </div>
+          <div class="form-row">
+            <label>Nombre de la sesión</label>
+            <input type="text" id="workout-name" placeholder="Ej: Empuje, Pierna, Full Body...">
+          </div>
         </div>
         <div class="form-row inline" id="start-from-routine-row">
           <select id="start-from-routine-select"><option value="">— Empezar desde una rutina —</option></select>
           <button class="btn small" id="start-from-routine-btn">Cargar rutina</button>
         </div>
+      </div>
 
-        <div id="current-session-exercises"></div>
+      <div id="current-session-exercises"></div>
 
-        <div class="form-row inline">
-          <select id="add-exercise-select"></select>
-          <button class="btn" id="add-exercise-btn">+ Añadir ejercicio</button>
-          <button class="btn small" id="toggle-new-exercise-btn">+ Ejercicio nuevo</button>
-        </div>
+      <div class="panel">
+        <h2>Añadir ejercicio</h2>
+        <div id="log-exercise-picker"></div>
         <div class="form-grid" id="inline-new-exercise" style="display:none;">
           <input type="text" id="inline-ex-name" placeholder="Nombre del ejercicio">
           <select id="inline-ex-group"></select>
           <select id="inline-ex-equipment"></select>
           <button class="btn small" id="inline-ex-save-btn">Crear y añadir</button>
         </div>
-
-        <button class="btn primary" id="save-workout-btn">Guardar sesión</button>
-        <span id="save-workout-msg" class="msg"></span>
       </div>
+
+      <button class="btn primary btn-block" id="save-workout-btn">💾 Guardar sesión</button>
+      <div style="text-align:center;"><span id="save-workout-msg" class="msg"></span></div>
     </div>
 
     <div id="workouts-routines" class="subtab-panel">
       <div class="panel">
         <h2>Mis rutinas</h2>
-        <div id="routines-list" class="list"></div>
+        <div id="routines-list" class="session-list"></div>
       </div>
       <div class="panel">
         <h2 id="routine-editor-title">Nueva rutina</h2>
@@ -100,10 +101,8 @@
           <input type="text" id="routine-name" placeholder="Ej: Empuje, Torso-Pierna A...">
         </div>
         <div id="routine-editor-exercises"></div>
-        <div class="form-row inline">
-          <select id="routine-add-exercise-select"></select>
-          <button class="btn small" id="routine-add-exercise-btn">+ Añadir ejercicio</button>
-        </div>
+        <h3>Añadir ejercicio a la rutina</h3>
+        <div id="routine-exercise-picker"></div>
         <button class="btn primary" id="save-routine-btn">Guardar rutina</button>
         <button class="btn" id="cancel-routine-edit-btn" style="display:none;">Cancelar edición</button>
         <span id="save-routine-msg" class="msg"></span>
@@ -113,18 +112,19 @@
     <div id="workouts-history" class="subtab-panel">
       <div class="panel">
         <h2>Historial de sesiones</h2>
-        <div id="workout-history-list" class="list"></div>
+        <div id="workout-history-list" class="session-list"></div>
       </div>
     </div>
 
     <div id="workouts-progress" class="subtab-panel">
       <div class="panel">
         <h2>Progreso por ejercicio</h2>
-        <div class="form-row">
-          <select id="progress-exercise-select"></select>
+        <div id="progress-selected" class="progress-selected" style="display:none;"></div>
+        <div id="progress-picker"></div>
+        <div id="progress-content" style="display:none;">
+          <div class="stats-row" id="progress-stats"></div>
+          <div class="chart-wrap"><canvas id="progress-chart"></canvas></div>
         </div>
-        <div class="stats-row" id="progress-stats"></div>
-        <div class="chart-wrap"><canvas id="progress-chart"></canvas></div>
       </div>
     </div>
 
@@ -142,74 +142,7 @@
           <select id="exercise-list-group-filter"><option value="">Todos los grupos</option></select>
           <select id="exercise-list-equipment-filter"><option value="">Todo el material</option></select>
         </div>
-        <div id="exercise-list" class="list"></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- NUTRITION -->
-  <section id="tab-nutrition" class="tab-panel">
-    <div class="subtabs">
-      <button class="subtab-btn active" data-subtab="log">Registro diario</button>
-      <button class="subtab-btn" data-subtab="foods">Base de alimentos</button>
-    </div>
-
-    <div id="nutrition-log" class="subtab-panel active">
-      <div class="panel">
-        <div class="form-row inline">
-          <label>Fecha</label>
-          <input type="date" id="nutrition-date">
-        </div>
-        <div class="stats-row" id="nutrition-day-totals"></div>
-      </div>
-
-      <div class="panel" id="meal-panels"></div>
-
-      <div class="panel">
-        <h2>Añadir alimento</h2>
-        <div class="form-row inline">
-          <input type="text" id="food-search" placeholder="Buscar alimento (ej: pollo, avena, yogur...)">
-          <span id="food-search-status" class="hint"></span>
-        </div>
-        <div id="food-search-results" class="list"></div>
-      </div>
-    </div>
-
-    <div id="nutrition-foods" class="subtab-panel">
-      <div class="panel">
-        <h2>Base de datos de alimentos</h2>
-        <div class="form-row inline">
-          <input type="text" id="foods-db-search" placeholder="Buscar por nombre, marca o tienda...">
-          <select id="foods-db-store-filter">
-            <option value="">Todas las tiendas</option>
-            <option value="Mercadona">Mercadona</option>
-            <option value="Lidl">Lidl</option>
-            <option value="Genérico">Genérico</option>
-            <option value="Open Food Facts">Open Food Facts</option>
-            <option value="Personalizado">Personalizado</option>
-          </select>
-        </div>
-        <div id="foods-db-list" class="list"></div>
-      </div>
-
-      <div class="panel">
-        <h2>Añadir alimento personalizado</h2>
-        <div class="form-grid">
-          <input type="text" id="cf-name" placeholder="Nombre">
-          <input type="text" id="cf-brand" placeholder="Marca (opcional)">
-          <select id="cf-store">
-            <option value="Personalizado">Personalizado</option>
-            <option value="Mercadona">Mercadona</option>
-            <option value="Lidl">Lidl</option>
-            <option value="Genérico">Genérico</option>
-          </select>
-          <input type="number" id="cf-kcal" placeholder="kcal /100g">
-          <input type="number" id="cf-protein" placeholder="Proteína g/100g">
-          <input type="number" id="cf-carbs" placeholder="Carbos g/100g">
-          <input type="number" id="cf-fat" placeholder="Grasas g/100g">
-        </div>
-        <button class="btn" id="add-custom-food-btn">+ Añadir a la base de datos</button>
-        <span id="add-food-msg" class="msg"></span>
+        <div id="exercise-list" class="session-list"></div>
       </div>
     </div>
   </section>
@@ -217,20 +150,8 @@
   <!-- SETTINGS -->
   <section id="tab-settings" class="tab-panel">
     <div class="panel">
-      <h2>Objetivos nutricionales diarios</h2>
-      <div class="form-grid">
-        <label>Calorías (kcal)<input type="number" id="set-kcal"></label>
-        <label>Proteína (g)<input type="number" id="set-protein"></label>
-        <label>Carbohidratos (g)<input type="number" id="set-carbs"></label>
-        <label>Grasas (g)<input type="number" id="set-fat"></label>
-      </div>
-      <button class="btn primary" id="save-settings-btn">Guardar objetivos</button>
-      <span id="save-settings-msg" class="msg"></span>
-    </div>
-
-    <div class="panel">
       <h2>Copia de seguridad</h2>
-      <p class="hint">Todos tus datos se guardan localmente en este navegador. Exporta una copia de vez en cuando por si acaso, o para pasarlos a otro dispositivo.</p>
+      <p class="hint">Todos tus datos se guardan localmente en este dispositivo. Exporta una copia de vez en cuando por si acaso, o para pasarlos a otro dispositivo.</p>
       <button class="btn" id="export-btn">⬇️ Exportar datos (JSON)</button>
       <label class="btn" for="import-file">⬆️ Importar datos</label>
       <input type="file" id="import-file" accept="application/json" style="display:none">
@@ -248,10 +169,9 @@
 <script src="js/vendor/chart.umd.js"></script>
 <script src="js/storage.js"></script>
 <script src="js/seed-exercises.js"></script>
-<script src="js/seed-foods.js"></script>
+<script src="js/exercise-picker.js"></script>
 <script src="js/workouts.js"></script>
 <script src="js/routines.js"></script>
-<script src="js/nutrition.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

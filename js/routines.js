@@ -3,12 +3,24 @@
 const Routines = (() => {
   let editingId = null;
   let editorExercises = []; // [{exerciseId, targetSets, targetReps}]
+  let picker = null;
 
-  function refreshExerciseSelect() {
-    const sel = document.getElementById('routine-add-exercise-select');
-    if (!sel) return;
-    const exercises = Storage.getExercises().sort((a, b) => a.name.localeCompare(b.name));
-    sel.innerHTML = exercises.map(e => `<option value="${e.id}">${e.name} (${e.group})</option>`).join('');
+  function mountPicker() {
+    const container = document.getElementById('routine-exercise-picker');
+    picker = ExercisePicker.mount(container, {
+      placeholder: 'Buscar ejercicio para añadir a la rutina...',
+      excludeIds: () => editorExercises.map(e => e.exerciseId),
+      onSelect: (ex) => addExercise(ex.id),
+      onCreate: (name) => {
+        const ex = Storage.addExercise(name, 'Otro', 'Otro');
+        addExercise(ex.id);
+        if (typeof Workouts !== 'undefined') Workouts.renderStartFromRoutineSelect();
+      },
+    });
+  }
+
+  function refreshPicker() {
+    if (picker) picker.refresh();
   }
 
   function renderList() {
@@ -16,24 +28,31 @@ const Routines = (() => {
     const routines = Storage.getRoutines();
     const exercises = Storage.getExercises();
     if (routines.length === 0) {
-      container.innerHTML = '<p class="hint">Todavía no has creado ninguna rutina. Crea una abajo.</p>';
+      container.innerHTML = '<p class="hint empty-hint">Todavía no has creado ninguna rutina. Crea una abajo.</p>';
       return;
     }
     container.innerHTML = routines.map(r => {
+      const avatars = r.exercises.slice(0, 6).map(re => {
+        const ex = exercises.find(x => x.id === re.exerciseId);
+        return exerciseAvatarHtml(ex ? ex.group : 'Otro', 'sm');
+      }).join('');
       const names = r.exercises.map(re => {
         const ex = exercises.find(x => x.id === re.exerciseId);
-        return `${ex ? ex.name : '?'} (${re.targetSets}x${re.targetReps || '?'})`;
+        return `${ex ? ex.name : '?'} (${re.targetSets}×${re.targetReps || '?'})`;
       }).join(', ');
       return `
-        <div class="list-item">
-          <div>
-            <strong>${r.name}</strong>
-            <div class="hint">${names}</div>
+        <div class="panel session-card">
+          <div class="session-card-header">
+            <div>
+              <strong class="session-name">${r.name}</strong>
+              <div class="hint">${names}</div>
+            </div>
           </div>
-          <div>
-            <button class="btn small" onclick="Routines.start('${r.id}')">▶️ Iniciar</button>
-            <button class="icon-btn" onclick="Routines.edit('${r.id}')">✏️</button>
-            <button class="icon-btn" onclick="Routines.remove('${r.id}')">🗑️</button>
+          <div class="routine-avatars">${avatars}</div>
+          <div class="routine-actions">
+            <button class="btn small primary" onclick="Routines.start('${r.id}')">▶️ Iniciar</button>
+            <button class="btn small ghost" onclick="Routines.edit('${r.id}')">✏️ Editar</button>
+            <button class="btn small ghost" onclick="Routines.remove('${r.id}')">🗑️ Eliminar</button>
           </div>
         </div>
       `;
@@ -43,20 +62,21 @@ const Routines = (() => {
   function renderEditor() {
     const container = document.getElementById('routine-editor-exercises');
     if (editorExercises.length === 0) {
-      container.innerHTML = '<p class="hint">Añade ejercicios a la rutina con el selector de abajo.</p>';
+      container.innerHTML = '<p class="hint empty-hint">Añade ejercicios a la rutina buscando abajo.</p>';
       return;
     }
     const exercises = Storage.getExercises();
     container.innerHTML = editorExercises.map((re, idx) => {
       const ex = exercises.find(x => x.id === re.exerciseId);
       return `
-        <div class="exercise-block">
-          <div class="exercise-block-header">
-            <strong>${ex ? ex.name : '?'}</strong>
-            <button class="icon-btn" onclick="Routines.removeExercise(${idx})">Quitar ✕</button>
+        <div class="panel exercise-card">
+          <div class="exercise-card-header">
+            ${exerciseAvatarHtml(ex ? ex.group : 'Otro')}
+            <div class="exercise-card-title"><strong>${ex ? ex.name : '?'}</strong></div>
+            <button class="icon-btn" onclick="Routines.removeExercise(${idx})">✕</button>
           </div>
           <div class="form-row inline">
-            <label>Series objetivo <input type="number" min="1" style="width:70px" value="${re.targetSets}"
+            <label>Series <input type="number" min="1" style="width:70px" value="${re.targetSets}"
               onchange="Routines.updateField(${idx}, 'targetSets', this.value)"></label>
             <label>Reps objetivo <input type="text" style="width:90px" placeholder="ej: 8-10" value="${re.targetReps || ''}"
               onchange="Routines.updateField(${idx}, 'targetReps', this.value)"></label>
@@ -66,21 +86,17 @@ const Routines = (() => {
     }).join('');
   }
 
-  function addExercise() {
-    const sel = document.getElementById('routine-add-exercise-select');
-    const exerciseId = sel.value;
-    if (!exerciseId) return;
-    if (editorExercises.some(e => e.exerciseId === exerciseId)) {
-      alert('Ese ejercicio ya está en la rutina.');
-      return;
-    }
+  function addExercise(exerciseId) {
+    if (editorExercises.some(e => e.exerciseId === exerciseId)) return;
     editorExercises.push({ exerciseId, targetSets: 3, targetReps: '8-10' });
     renderEditor();
+    if (picker) picker.refresh();
   }
 
   function removeExercise(idx) {
     editorExercises.splice(idx, 1);
     renderEditor();
+    if (picker) picker.refresh();
   }
 
   function updateField(idx, field, value) {
@@ -94,6 +110,7 @@ const Routines = (() => {
     document.getElementById('routine-editor-title').textContent = 'Nueva rutina';
     document.getElementById('cancel-routine-edit-btn').style.display = 'none';
     renderEditor();
+    if (picker) picker.refresh();
   }
 
   function save() {
@@ -131,6 +148,7 @@ const Routines = (() => {
     document.getElementById('routine-editor-title').textContent = 'Editar rutina';
     document.getElementById('cancel-routine-edit-btn').style.display = 'inline-block';
     renderEditor();
+    if (picker) picker.refresh();
     document.getElementById('routine-name').scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
 
@@ -150,20 +168,19 @@ const Routines = (() => {
   }
 
   function bindEvents() {
-    document.getElementById('routine-add-exercise-btn').addEventListener('click', addExercise);
     document.getElementById('save-routine-btn').addEventListener('click', save);
     document.getElementById('cancel-routine-edit-btn').addEventListener('click', resetEditor);
   }
 
   function init() {
     bindEvents();
-    refreshExerciseSelect();
+    mountPicker();
     renderList();
     renderEditor();
   }
 
   return {
-    init, renderList, refreshExerciseSelect, addExercise, removeExercise, updateField,
+    init, renderList, refreshPicker, addExercise, removeExercise, updateField,
     save, edit, remove, start,
   };
 })();

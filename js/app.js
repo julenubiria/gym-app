@@ -13,7 +13,7 @@ const App = (() => {
     panelEl.querySelectorAll(':scope > .subtab-panel').forEach(p => p.classList.toggle('active', p.id.endsWith('-' + subtabName)));
 
     if (panelEl.id === 'tab-workouts') {
-      if (subtabName === 'routines') { Routines.refreshPicker(); Routines.renderList(); }
+      if (subtabName === 'routines') Routines.showBrowse();
       if (subtabName === 'history') Workouts.renderHistory();
       if (subtabName === 'exercises') Workouts.renderExerciseList();
     }
@@ -153,9 +153,28 @@ const App = (() => {
     });
   }
 
+  function initTheme() {
+    const btn = document.getElementById('theme-toggle-btn');
+    function current() {
+      return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
+    }
+    function applyIcon() {
+      btn.textContent = current() === 'light' ? '🌙' : '☀️';
+    }
+    applyIcon();
+    btn.addEventListener('click', () => {
+      const next = current() === 'light' ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-theme', next);
+      try { localStorage.setItem('gymapp_theme', next); } catch (e) {}
+      applyIcon();
+      if (typeof Workouts !== 'undefined' && Workouts.rerenderChartTheme) Workouts.rerenderChartTheme();
+    });
+  }
+
   function init() {
     Storage.seedIfNeeded();
     bindNav();
+    initTheme();
     Workouts.init();
     Routines.init();
     initSettingsForm();

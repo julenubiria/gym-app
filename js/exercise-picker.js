@@ -1,5 +1,5 @@
 /* Selector de ejercicios reutilizable: busca escribiendo + filtro por grupo muscular.
- * Se usa en "Registrar sesión", en el editor de rutinas y en "Progreso". */
+ * Se usa en "Registrar sesión", en el editor de rutinas (modo "library") y en "Progreso". */
 
 const GROUP_META = {
   'Pecho': { color: '#ff6b6b', initials: 'PC' },
@@ -37,9 +37,21 @@ const ExercisePicker = {
       excludeIds: () => [],
       onSelect: () => {},
       onCreate: null,
+      layout: 'default', // 'default' (chips) | 'library' (selects + botón añadir, estilo Hevy)
     }, opts);
 
-    container.innerHTML = `
+    const isLibrary = opts.layout === 'library';
+
+    container.innerHTML = isLibrary ? `
+      <div class="ex-picker ex-picker-library">
+        <div class="ex-picker-filters">
+          <select class="ex-picker-equip-filter"><option value="">Todo el equipamiento</option>${EQUIPMENT_TYPES.map(e => `<option value="${e}">${e}</option>`).join('')}</select>
+          <select class="ex-picker-group-filter"><option value="">Todos los músculos</option>${MUSCLE_GROUPS.map(g => `<option value="${g}">${g}</option>`).join('')}</select>
+        </div>
+        <input type="text" class="ex-picker-input" placeholder="${opts.placeholder}">
+        <div class="ex-picker-results library"></div>
+      </div>
+    ` : `
       <div class="ex-picker">
         <input type="text" class="ex-picker-input" placeholder="${opts.placeholder}">
         <div class="ex-picker-chips">
@@ -51,23 +63,37 @@ const ExercisePicker = {
     `;
     const input = container.querySelector('.ex-picker-input');
     const resultsEl = container.querySelector('.ex-picker-results');
-    const chips = container.querySelectorAll('.chip');
     let activeGroup = '';
+    let activeEquip = '';
+
+    function resultRow(e) {
+      if (isLibrary) {
+        return `
+          <button type="button" class="ex-result ex-result-lib" data-id="${e.id}">
+            <span class="ex-plus">+</span>
+            ${exerciseAvatarHtml(e.group)}
+            <span class="ex-result-info"><strong>${escapeHtml(e.name)}</strong><span class="hint">${e.group}${e.custom ? ' · <span class=\'tag\'>Personalizado</span>' : ''}</span></span>
+          </button>
+        `;
+      }
+      return `
+        <button type="button" class="ex-result" data-id="${e.id}">
+          ${exerciseAvatarHtml(e.group)}
+          <span class="ex-result-info"><strong>${escapeHtml(e.name)}</strong><span class="hint">${e.group} · ${e.equipment}</span></span>
+        </button>
+      `;
+    }
 
     function render() {
       const q = input.value.trim().toLowerCase();
       const excluded = new Set(opts.excludeIds());
       let list = Storage.getExercises().filter(e => !excluded.has(e.id));
       if (activeGroup) list = list.filter(e => e.group === activeGroup);
+      if (activeEquip) list = list.filter(e => e.equipment === activeEquip);
       if (q) list = list.filter(e => e.name.toLowerCase().includes(q));
-      list = list.sort((a, b) => a.name.localeCompare(b.name)).slice(0, 30);
+      list = list.sort((a, b) => a.name.localeCompare(b.name)).slice(0, 40);
 
-      let html = list.map(e => `
-        <button type="button" class="ex-result" data-id="${e.id}">
-          ${exerciseAvatarHtml(e.group)}
-          <span class="ex-result-info"><strong>${escapeHtml(e.name)}</strong><span class="hint">${e.group} · ${e.equipment}</span></span>
-        </button>
-      `).join('');
+      let html = list.map(resultRow).join('');
 
       if (list.length === 0) {
         if (q && opts.allowCreate) {
@@ -80,14 +106,19 @@ const ExercisePicker = {
     }
 
     input.addEventListener('input', render);
-    input.addEventListener('focus', () => { resultsEl.classList.add('open'); render(); });
-
-    chips.forEach(c => c.addEventListener('click', () => {
-      chips.forEach(x => x.classList.remove('active'));
-      c.classList.add('active');
-      activeGroup = c.dataset.group;
-      render();
-    }));
+    if (!isLibrary) {
+      input.addEventListener('focus', () => { resultsEl.classList.add('open'); render(); });
+      const chips = container.querySelectorAll('.chip');
+      chips.forEach(c => c.addEventListener('click', () => {
+        chips.forEach(x => x.classList.remove('active'));
+        c.classList.add('active');
+        activeGroup = c.dataset.group;
+        render();
+      }));
+    } else {
+      container.querySelector('.ex-picker-group-filter').addEventListener('change', (e) => { activeGroup = e.target.value; render(); });
+      container.querySelector('.ex-picker-equip-filter').addEventListener('change', (e) => { activeEquip = e.target.value; render(); });
+    }
 
     resultsEl.addEventListener('click', (e) => {
       const btn = e.target.closest('.ex-result');
@@ -97,7 +128,7 @@ const ExercisePicker = {
       } else {
         const ex = Storage.getExercises().find(x => x.id === btn.dataset.id);
         if (ex) opts.onSelect(ex);
-        input.value = '';
+        if (!isLibrary) input.value = '';
       }
       render();
     });

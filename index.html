@@ -11,12 +11,23 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="GymApp">
-<link rel="stylesheet" href="css/styles.css?v=4">
+<script>
+(function () {
+  try {
+    var t = localStorage.getItem('gymapp_theme');
+    if (t === 'light' || t === 'dark') document.documentElement.setAttribute('data-theme', t);
+  } catch (e) {}
+})();
+</script>
+<link rel="stylesheet" href="css/styles.css?v=5">
 </head>
 <body>
 
 <header class="topbar">
-  <div class="brand"><span class="brand-mark">🏋️</span> Mi Gym App</div>
+  <div class="brand-row">
+    <div class="brand"><span class="brand-mark">🏋️</span> Mi Gym App</div>
+    <button class="theme-toggle" id="theme-toggle-btn" title="Cambiar tema" aria-label="Cambiar tema"></button>
+  </div>
   <nav class="tabs" id="tabs">
     <button class="tab-btn active" data-tab="dashboard">Inicio</button>
     <button class="tab-btn" data-tab="workouts">Entrenamiento</button>
@@ -90,23 +101,43 @@
     </div>
 
     <div id="workouts-routines" class="subtab-panel">
-      <div class="panel">
-        <h2>Mis rutinas</h2>
-        <div id="routines-list" class="session-list"></div>
-      </div>
-      <div class="panel">
-        <h2 id="routine-editor-title">Nueva rutina</h2>
-        <div class="form-row">
-          <label>Nombre de la rutina</label>
-          <input type="text" id="routine-name" placeholder="Ej: Empuje, Torso-Pierna A...">
+
+      <div id="routines-browse">
+        <div class="routines-toolbar">
+          <button class="btn primary small" id="new-routine-btn">+ Nueva rutina</button>
+          <button class="btn small ghost" id="new-folder-btn">+ Nueva carpeta</button>
         </div>
-        <div id="routine-editor-exercises"></div>
-        <h3>Añadir ejercicio a la rutina</h3>
-        <div id="routine-exercise-picker"></div>
-        <button class="btn primary" id="save-routine-btn">Guardar rutina</button>
-        <button class="btn" id="cancel-routine-edit-btn" style="display:none;">Cancelar edición</button>
-        <span id="save-routine-msg" class="msg"></span>
+        <div id="routines-groups"></div>
       </div>
+
+      <div id="routine-editor" style="display:none;">
+        <div class="routine-editor-header">
+          <button class="btn small ghost" id="routine-editor-back-btn">← Volver</button>
+          <h2 id="routine-editor-title">Nueva rutina</h2>
+          <button class="btn primary small" id="save-routine-btn">Guardar</button>
+        </div>
+        <span id="save-routine-msg" class="msg"></span>
+
+        <div class="routine-editor-grid">
+          <div class="routine-editor-main">
+            <input type="text" id="routine-name" placeholder="Título de la rutina" class="routine-title-input">
+            <select id="routine-folder-select" class="routine-folder-select"><option value="">Sin carpeta</option></select>
+            <div id="routine-editor-exercises"></div>
+          </div>
+
+          <div class="routine-editor-side">
+            <div class="panel routine-summary">
+              <h3>Resumen</h3>
+              <div class="stats-row" id="routine-summary-stats"></div>
+            </div>
+            <div class="panel routine-library">
+              <h3>Biblioteca</h3>
+              <div id="routine-exercise-picker"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
 
     <div id="workouts-history" class="subtab-panel">
@@ -167,11 +198,11 @@
 </main>
 
 <script src="js/vendor/chart.umd.js"></script>
-<script src="js/storage.js?v=4"></script>
-<script src="js/seed-exercises.js?v=4"></script>
-<script src="js/exercise-picker.js?v=4"></script>
-<script src="js/workouts.js?v=4"></script>
-<script src="js/routines.js?v=4"></script>
-<script src="js/app.js?v=4"></script>
+<script src="js/storage.js?v=5"></script>
+<script src="js/seed-exercises.js?v=5"></script>
+<script src="js/exercise-picker.js?v=5"></script>
+<script src="js/workouts.js?v=5"></script>
+<script src="js/routines.js?v=5"></script>
+<script src="js/app.js?v=5"></script>
 </body>
 </html>

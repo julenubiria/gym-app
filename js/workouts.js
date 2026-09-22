@@ -76,12 +76,12 @@ const Workouts = (() => {
   function startFromRoutine(routine) {
     currentSessionExercises = routine.exercises.map(re => {
       const last = getLastPerformance(re.exerciseId);
-      const targetSets = re.targetSets || 1;
-      const sets = [];
-      for (let i = 0; i < targetSets; i++) {
+      const sets = re.sets.map((target, i) => {
         const src = last ? (last[i] || last[last.length - 1]) : null;
-        sets.push({ weight: src ? src.weight : '', reps: src ? src.reps : '', rpe: '' });
-      }
+        const weight = target.weight !== '' && target.weight != null ? target.weight : (src ? src.weight : '');
+        const reps = src ? src.reps : (target.repMin !== '' && target.repMin != null ? target.repMin : '');
+        return { weight, reps, rpe: '' };
+      });
       return { exerciseId: re.exerciseId, sets };
     });
     if (!sessionStartAt) sessionStartAt = Date.now();
@@ -354,7 +354,24 @@ const Workouts = (() => {
       `;
     }
 
-    const ctx = document.getElementById('progress-chart').getContext('2d');
+    drawProgressChart(points);
+  }
+
+  let lastProgressPoints = [];
+
+  function cssVar(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+
+  function drawProgressChart(points) {
+    lastProgressPoints = points;
+    const canvas = document.getElementById('progress-chart');
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const accent = cssVar('--accent') || '#7c9eff';
+    const accent2 = cssVar('--accent-2') || '#5ddac0';
+    const textDim = cssVar('--text-dim') || '#8b90a0';
+    const border = cssVar('--border') || '#262834';
     if (progressChart) progressChart.destroy();
     progressChart = new Chart(ctx, {
       type: 'line',
@@ -364,16 +381,16 @@ const Workouts = (() => {
           {
             label: '1RM estimada (kg)',
             data: points.map(p => p.est1rm),
-            borderColor: '#7c9eff',
-            backgroundColor: '#7c9eff33',
+            borderColor: accent,
+            backgroundColor: accent + '33',
             tension: 0.25,
             yAxisID: 'y',
           },
           {
             label: 'Volumen sesión (kg)',
             data: points.map(p => p.volume),
-            borderColor: '#5ddac0',
-            backgroundColor: '#5ddac033',
+            borderColor: accent2,
+            backgroundColor: accent2 + '33',
             tension: 0.25,
             yAxisID: 'y1',
           },
@@ -384,12 +401,17 @@ const Workouts = (() => {
         maintainAspectRatio: false,
         interaction: { mode: 'index', intersect: false },
         scales: {
-          y: { position: 'left', title: { display: true, text: 'kg (1RM est.)' } },
-          y1: { position: 'right', title: { display: true, text: 'Volumen (kg)' }, grid: { drawOnChartArea: false } },
+          x: { ticks: { color: textDim }, grid: { color: border } },
+          y: { position: 'left', title: { display: true, text: 'kg (1RM est.)', color: textDim }, ticks: { color: textDim }, grid: { color: border } },
+          y1: { position: 'right', title: { display: true, text: 'Volumen (kg)', color: textDim }, ticks: { color: textDim }, grid: { drawOnChartArea: false } },
         },
-        plugins: { legend: { labels: { color: '#c9cdd6' } } },
+        plugins: { legend: { labels: { color: textDim } } },
       },
     });
+  }
+
+  function rerenderChartTheme() {
+    if (progressChart && lastProgressPoints.length >= 0) drawProgressChart(lastProgressPoints);
   }
 
   function renderExerciseFilterSelects() {
@@ -487,5 +509,6 @@ const Workouts = (() => {
     init, initLogForm, renderHistory, renderProgress, renderExerciseList, startFromRoutine, getLastPerformance,
     addSet, removeSet, removeExerciseFromSession, updateSet, deleteWorkout, removeExercise, addExerciseToSession,
     renderStartFromRoutineSelect, epley1RM, computeWorkoutRecords, sessionVolume, formatDuration, sessionCardHtml,
+    rerenderChartTheme,
   };
 })();

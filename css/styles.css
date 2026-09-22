@@ -11,8 +11,27 @@
   --gold: #ffcf5c;
   --danger: #ff6b6b;
   --success: #5ddac0;
+  --topbar-bg: rgba(21, 22, 28, 0.92);
+  --btn-primary-text: #0a0b0e;
   --radius: 14px;
   --radius-sm: 9px;
+}
+
+:root[data-theme="light"] {
+  --bg: #f4f5f8;
+  --bg-panel: #ffffff;
+  --bg-card: #f0f1f5;
+  --bg-card-2: #e7e9ef;
+  --border: #e2e4ea;
+  --text: #16171c;
+  --text-dim: #6b7080;
+  --accent: #4263eb;
+  --accent-2: #0ca678;
+  --gold: #e8a317;
+  --danger: #e03131;
+  --success: #0ca678;
+  --topbar-bg: rgba(255, 255, 255, 0.92);
+  --btn-primary-text: #ffffff;
 }
 
 * { box-sizing: border-box; }
@@ -30,7 +49,7 @@ body {
   position: sticky;
   top: 0;
   z-index: 10;
-  background: rgba(21, 22, 28, 0.92);
+  background: var(--topbar-bg);
   backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--border);
   padding: 14px 16px 10px;
@@ -38,6 +57,8 @@ body {
   flex-direction: column;
   gap: 12px;
 }
+
+.brand-row { display: flex; align-items: center; justify-content: space-between; }
 
 .brand {
   font-size: 1.15rem;
@@ -48,6 +69,21 @@ body {
   gap: 8px;
 }
 .brand-mark { font-size: 1.3rem; }
+
+.theme-toggle {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.theme-toggle:hover { border-color: var(--accent); }
 
 .tabs, .subtabs {
   display: flex;
@@ -73,7 +109,7 @@ body {
 
 .tab-btn.active, .subtab-btn.active {
   background: var(--accent);
-  color: #0a0b0e;
+  color: var(--btn-primary-text);
   border-color: var(--accent);
 }
 
@@ -186,7 +222,7 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
   transition: all .15s;
 }
 .btn:hover { border-color: var(--accent); }
-.btn.primary { background: var(--accent); color: #0a0b0e; border-color: var(--accent); }
+.btn.primary { background: var(--accent); color: var(--btn-primary-text); border-color: var(--accent); }
 .btn.primary:hover { filter: brightness(1.08); }
 .btn.ghost { background: transparent; }
 .btn.danger { background: transparent; border-color: var(--danger); color: var(--danger); }
@@ -228,7 +264,7 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
 
 .tag {
   display: inline-block;
-  background: #262834;
+  background: var(--bg-card-2);
   color: var(--text-dim);
   font-size: 0.7rem;
   padding: 2px 8px;
@@ -236,7 +272,7 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
   margin-left: 4px;
   font-weight: 600;
 }
-.tag.store { background: #1f2c3a; color: #7fb0e0; }
+.tag.store { background: var(--bg-card-2); color: var(--accent); }
 
 /* Avatares de ejercicio (círculo de color por grupo muscular) */
 .ex-avatar {
@@ -271,7 +307,7 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
   white-space: nowrap;
   cursor: pointer;
 }
-.chip.active { background: var(--accent); border-color: var(--accent); color: #0a0b0e; }
+.chip.active { background: var(--accent); border-color: var(--accent); color: var(--btn-primary-text); }
 .ex-picker-results { display: flex; flex-direction: column; gap: 6px; max-height: 320px; overflow-y: auto; }
 .ex-result {
   display: flex;
@@ -393,10 +429,105 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
 
 .chart-wrap { height: 300px; margin-top: 12px; }
 
+/* ---- Rutinas: lista con carpetas ---- */
+.routines-toolbar { display: flex; gap: 8px; margin-bottom: 14px; }
+
+.routine-folder { margin-bottom: 14px; }
+.routine-folder-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 4px;
+  cursor: pointer;
+  user-select: none;
+}
+.folder-chevron { color: var(--text-dim); width: 14px; }
+.folder-actions { margin-left: auto; display: flex; gap: 2px; }
+.routine-folder-body { display: flex; flex-direction: column; gap: 12px; padding-left: 4px; }
+
+.routine-card { }
+.routine-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+.routine-card-names { margin: 4px 0 2px; }
+
+/* ---- Rutinas: editor ---- */
+.routine-editor-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 4px;
+}
+.routine-editor-header h2 { flex: 1; margin: 0; text-align: center; }
+
+.routine-title-input { font-size: 1.05rem; font-weight: 700; margin-bottom: 8px; }
+.routine-folder-select { margin-bottom: 14px; }
+
+.routine-editor-grid { display: flex; flex-direction: column; gap: 16px; }
+.routine-editor-side { display: flex; flex-direction: column; gap: 14px; }
+.routine-library { max-height: 560px; display: flex; flex-direction: column; }
+.routine-library .ex-picker-results { flex: 1; }
+
+.exercise-card-actions { display: flex; gap: 2px; }
+.exercise-card-actions .icon-btn:disabled { opacity: 0.3; cursor: default; }
+
+.note-toggle-btn { margin-bottom: 8px; }
+.routine-note-input {
+  width: 100%;
+  min-height: 54px;
+  margin-bottom: 10px;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 0.88rem;
+}
+.routine-rest-row { margin-bottom: 10px; }
+.routine-rest-row label { flex-shrink: 0; }
+
+.routine-set-row {
+  display: grid;
+  grid-template-columns: 24px 1fr 1.6fr 26px;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 6px;
+}
+.routine-set-row-header { color: var(--text-dim); font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; }
+.rep-range-inputs { display: flex; align-items: center; gap: 4px; }
+.rep-range-inputs input { text-align: center; }
+.rep-range-inputs span { color: var(--text-dim); flex-shrink: 0; }
+
+/* ---- Biblioteca de ejercicios (modo library, panel lateral) ---- */
+.ex-picker-library .ex-picker-filters { display: flex; gap: 8px; margin-bottom: 8px; }
+.ex-picker-library .ex-picker-input { margin-bottom: 8px; }
+.ex-result-lib { position: relative; padding-left: 40px; }
+.ex-plus {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--btn-primary-text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+@media (min-width: 860px) {
+  #app.wide { max-width: 1040px; }
+  .routine-editor-grid { flex-direction: row; align-items: flex-start; }
+  .routine-editor-main { flex: 1.3; min-width: 0; }
+  .routine-editor-side { flex: 1; position: sticky; top: 90px; }
+}
+
 @media (max-width: 640px) {
   .grid.cards { grid-template-columns: repeat(2, 1fr); }
   .form-row-pair { grid-template-columns: 1fr; }
   .set-row { grid-template-columns: 22px 1fr 1fr 1fr 22px; }
+  .routine-set-row { grid-template-columns: 20px 1fr 1.6fr 22px; }
   .list-item { flex-direction: column; align-items: stretch; }
   .heatmap { grid-template-columns: repeat(14, 1fr); }
+  .ex-picker-library .ex-picker-filters { flex-direction: column; }
 }

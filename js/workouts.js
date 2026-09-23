@@ -67,7 +67,7 @@ const Workouts = (() => {
     panel.style.display = 'block';
     container.innerHTML = routines.map(r => `
       <button type="button" class="routine-quick-btn" data-routine-id="${r.id}">
-        <span class="routine-quick-btn-icon">▶️</span>
+        <span class="routine-quick-btn-icon">${icon('play', 16)}</span>
         <span>
           <strong>${escapeHtml(r.name)}</strong>
           <span class="hint">${r.exercises.length} ejercicios</span>
@@ -206,7 +206,7 @@ const Workouts = (() => {
 
     const durationMin = sessionStartAt ? Math.max(1, Math.round((Date.now() - sessionStartAt) / 60000)) : null;
     Storage.addWorkout({ date, name, entries: cleanEntries, durationMin });
-    msg.textContent = '¡Sesión guardada! 💪';
+    msg.textContent = '¡Sesión guardada!';
     msg.className = 'msg success';
     initLogForm();
     setTimeout(() => { msg.textContent = ''; }, 2500);
@@ -253,7 +253,7 @@ const Workouts = (() => {
         <div class="set-view-row">
           <span class="set-num">${i + 1}</span>
           <span>${s.weight}kg × ${s.reps} rep${s.reps === 1 ? '' : 's'}</span>
-          ${setMarks[i] ? '<span class="pr-badge" title="Nuevo récord">🏆</span>' : ''}
+          ${setMarks[i] ? `<span class="pr-badge" title="Nuevo récord">${icon('award', 14)}</span>` : ''}
         </div>
       `).join('');
       return `
@@ -274,13 +274,13 @@ const Workouts = (() => {
             <strong class="session-name">${w.name || 'Entrenamiento'}</strong>
             <div class="hint session-date">${dateLabel}</div>
           </div>
-          <button class="icon-btn" onclick="Workouts.deleteWorkout('${w.id}')">🗑️</button>
+          <button class="icon-btn" onclick="Workouts.deleteWorkout('${w.id}')">${icon('trash', 16)}</button>
         </div>
         <div class="session-stats-row">
           ${duration ? `<div class="session-stat"><span class="hint">Duración</span><strong>${duration}</strong></div>` : ''}
           <div class="session-stat"><span class="hint">Volumen</span><strong>${Math.round(volume).toLocaleString('es-ES')} kg</strong></div>
           <div class="session-stat"><span class="hint">Series</span><strong>${totalSets}</strong></div>
-          ${records > 0 ? `<div class="session-stat"><span class="hint">Récords</span><strong class="pr-count">🏆 ${records}</strong></div>` : ''}
+          ${records > 0 ? `<div class="session-stat"><span class="hint">Récords</span><strong class="pr-count">${icon('award', 14)} ${records}</strong></div>` : ''}
         </div>
         <div class="session-exercises">${exercisesHtml}</div>
       </div>
@@ -454,9 +454,9 @@ const Workouts = (() => {
       <div class="list-item">
         <div class="list-item-main">
           ${exerciseAvatarHtml(e.group, 'sm')}
-          <div><strong>${e.name}</strong><div class="hint">${e.group} · ${e.equipment || 'Otro'}</div></div>
+          <div><strong>${e.name}</strong><div class="hint">${e.group} · ${e.equipment || 'Otro'}${e.builtin ? ' · De fábrica' : ''}</div></div>
         </div>
-        <button class="icon-btn" onclick="Workouts.removeExercise('${e.id}')">🗑️</button>
+        ${e.builtin ? '' : `<button class="icon-btn" onclick="Workouts.removeExercise('${e.id}')">${icon('trash', 16)}</button>`}
       </div>
     `).join('') || '<p class="hint">Sin resultados.</p>';
   }
@@ -479,6 +479,8 @@ const Workouts = (() => {
   }
 
   function removeExercise(id) {
+    const ex = Storage.getExercises().find(x => x.id === id);
+    if (ex && ex.builtin) return; // los ejercicios de fábrica no se pueden borrar
     if (!confirm('¿Eliminar este ejercicio? No se borrará el historial de sesiones ya guardadas.')) return;
     Storage.deleteExercise(id);
     renderExerciseList();

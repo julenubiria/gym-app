@@ -43,8 +43,8 @@ const Routines = (() => {
             <strong>${escapeHtml(folder.name)}</strong>
             <span class="hint">(${folderRoutines.length})</span>
             <div class="folder-actions">
-              <button class="icon-btn" data-rename-folder="${folder.id}">✏️</button>
-              <button class="icon-btn" data-delete-folder="${folder.id}">🗑️</button>
+              <button class="icon-btn" data-rename-folder="${folder.id}">${icon('edit', 15)}</button>
+              <button class="icon-btn" data-delete-folder="${folder.id}">${icon('trash', 15)}</button>
             </div>
           </div>
           <div class="routine-folder-body" style="display:${collapsed ? 'none' : 'flex'}">
@@ -90,9 +90,9 @@ const Routines = (() => {
         <div class="hint routine-card-names">${escapeHtml(names)}</div>
         <div class="hint">${r.exercises.length} ejercicios · ${totalSets} series</div>
         <div class="routine-actions">
-          <button class="btn small primary" data-start="${r.id}">▶️ Iniciar</button>
-          <button class="btn small ghost" data-edit="${r.id}">✏️ Editar</button>
-          <button class="btn small ghost" data-remove="${r.id}">🗑️</button>
+          <button class="btn small primary" data-start="${r.id}">${icon('play', 15)}<span>Iniciar</span></button>
+          <button class="btn small ghost" data-edit="${r.id}">${icon('edit', 15)}<span>Editar</span></button>
+          <button class="icon-btn" data-remove="${r.id}">${icon('trash', 16)}</button>
         </div>
       </div>
     `;
@@ -262,7 +262,7 @@ const Routines = (() => {
             </div>
           </div>
 
-          <button class="btn small ghost note-toggle-btn" onclick="Routines.toggleNote(${idx})">${re.note ? '📝 Editar nota' : '+ Añadir nota'}</button>
+          <button class="btn small ghost note-toggle-btn" onclick="Routines.toggleNote(${idx})">${re.note ? 'Editar nota' : '+ Añadir nota'}</button>
           <textarea class="routine-note-input" placeholder="Nota (ej: técnica, tempo...)" style="display:${re._showNote || re.note ? 'block' : 'none'}"
             onchange="Routines.updateNote(${idx}, this.value)">${escapeHtml(re.note || '')}</textarea>
 

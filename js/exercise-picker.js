@@ -97,7 +97,7 @@ const ExercisePicker = {
 
       if (list.length === 0) {
         if (q && opts.allowCreate) {
-          html = `<button type="button" class="ex-result ex-create" data-create="1">➕ Crear "${escapeHtml(input.value.trim())}" como ejercicio nuevo</button>`;
+          html = `<button type="button" class="ex-result ex-create" data-create="1">+ Crear "${escapeHtml(input.value.trim())}" como ejercicio nuevo</button>`;
         } else {
           html = '<p class="hint">Sin resultados.</p>';
         }

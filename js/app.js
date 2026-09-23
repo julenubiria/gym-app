@@ -25,6 +25,22 @@ const App = (() => {
     if (settingsIconBtn) settingsIconBtn.innerHTML = icon('sliders', 20);
   }
 
+  function renderStaticIcons() {
+    document.querySelectorAll('.brand-mark').forEach(el => { el.innerHTML = icon('dumbbell', 20); });
+    const withIcon = {
+      'save-workout-btn': ['check', 'Guardar sesión'],
+      'export-btn': ['download', 'Exportar datos (JSON)'],
+      'reset-btn': ['trash', 'Borrar todos los datos'],
+      'routine-editor-back-btn': ['chevronLeft', 'Volver'],
+    };
+    Object.entries(withIcon).forEach(([id, [iconName, label]]) => {
+      const el = document.getElementById(id);
+      if (el) el.innerHTML = `${icon(iconName, 16)}<span>${label}</span>`;
+    });
+    const importLabel = document.querySelector('label[for="import-file"]');
+    if (importLabel) importLabel.innerHTML = `${icon('upload', 16)}<span>Importar datos</span>`;
+  }
+
   function switchPage(pageName) {
     document.querySelectorAll('[data-page]').forEach(el => el.classList.toggle('active', el.dataset.page === pageName));
     document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id === `page-${pageName}`));
@@ -103,7 +119,7 @@ const App = (() => {
 
     document.getElementById('dashboard-cards').innerHTML = `
       <div class="card">
-        <span class="card-label">🔥 Racha</span>
+        <span class="card-label">${icon('flame', 14)} Racha</span>
         <span class="card-value">${streak}</span>
         <span class="card-sub">día${streak === 1 ? '' : 's'} seguidos</span>
       </div>
@@ -118,7 +134,7 @@ const App = (() => {
         <span class="card-sub">sesiones</span>
       </div>
       <div class="card">
-        <span class="card-label">🏆 Récords</span>
+        <span class="card-label">${icon('award', 14)} Récords</span>
         <span class="card-value">${totalRecords}</span>
         <span class="card-sub">PRs totales</span>
       </div>
@@ -196,6 +212,7 @@ const App = (() => {
   function init() {
     Storage.seedIfNeeded();
     renderNav();
+    renderStaticIcons();
     bindNav();
     initTheme();
     Workouts.init();

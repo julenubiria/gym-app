@@ -7,6 +7,7 @@ const Storage = (() => {
     routines: 'gymapp_routines',
     folders: 'gymapp_folders',
     seeded: 'gymapp_seeded_v3',
+    migratedBuiltin: 'gymapp_migrated_builtin_v1',
   };
 
   function uid() {
@@ -37,7 +38,7 @@ const Storage = (() => {
   }
   function addExercise(name, group, equipment) {
     const list = getExercises();
-    const ex = { id: uid(), name, group: group || 'Otro', equipment: equipment || 'Otro' };
+    const ex = { id: uid(), name, group: group || 'Otro', equipment: equipment || 'Otro', builtin: false };
     list.push(ex);
     saveExercises(list);
     return ex;
@@ -137,11 +138,32 @@ const Storage = (() => {
 
   // ---- Seed (first run only) ----
   function seedIfNeeded() {
-    if (read(KEYS.seeded, false)) return;
-    if (getExercises().length === 0 && typeof DEFAULT_EXERCISES !== 'undefined') {
-      saveExercises(DEFAULT_EXERCISES.map(e => ({ id: uid(), name: e.name, group: e.group, equipment: e.equipment })));
+    if (!read(KEYS.seeded, false)) {
+      if (getExercises().length === 0 && typeof DEFAULT_EXERCISES !== 'undefined') {
+        saveExercises(DEFAULT_EXERCISES.map(e => ({ id: uid(), name: e.name, group: e.group, equipment: e.equipment, builtin: true })));
+      }
+      write(KEYS.seeded, true);
     }
-    write(KEYS.seeded, true);
+    migrateBuiltinFlag();
+  }
+
+  // Para quien ya tenía ejercicios guardados antes de distinguir "de fábrica" de
+  // "creado por mí": marca como builtin los que coincidan por nombre con la lista de serie.
+  function migrateBuiltinFlag() {
+    if (read(KEYS.migratedBuiltin, false)) return;
+    if (typeof DEFAULT_EXERCISES !== 'undefined') {
+      const defaultNames = new Set(DEFAULT_EXERCISES.map(e => e.name));
+      const list = getExercises();
+      let changed = false;
+      list.forEach(e => {
+        if (e.builtin === undefined) {
+          e.builtin = defaultNames.has(e.name);
+          changed = true;
+        }
+      });
+      if (changed) saveExercises(list);
+    }
+    write(KEYS.migratedBuiltin, true);
   }
 
   // ---- Backup ----

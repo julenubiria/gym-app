@@ -19,7 +19,7 @@
   } catch (e) {}
 })();
 </script>
-<link rel="stylesheet" href="css/styles.css?v=10">
+<link rel="stylesheet" href="css/styles.css?v=11">
 </head>
 <body>
 
@@ -27,7 +27,7 @@
 
   <!-- SIDEBAR (escritorio) -->
   <aside class="sidebar">
-    <div class="sidebar-brand"><span class="brand-mark">🏋️</span> Julen Gym App</div>
+    <div class="sidebar-brand"><span class="brand-mark"></span> Julen Gym App</div>
     <nav class="sidebar-nav" id="sidebar-nav">
       <button class="nav-item active" data-page="dashboard"></button>
       <button class="nav-item" data-page="routines"></button>
@@ -45,7 +45,7 @@
 
     <!-- TOPBAR (móvil) -->
     <header class="topbar-mobile">
-      <div class="brand"><span class="brand-mark">🏋️</span> Julen Gym App</div>
+      <div class="brand"><span class="brand-mark"></span> Julen Gym App</div>
       <div class="topbar-actions">
         <button class="icon-only-btn" data-page="settings" title="Ajustes" aria-label="Ajustes"></button>
         <button class="theme-toggle" id="theme-toggle-btn-mobile" title="Cambiar tema" aria-label="Cambiar tema"></button>
@@ -107,7 +107,7 @@
           </div>
         </div>
 
-        <button class="btn primary btn-block" id="save-workout-btn">💾 Guardar sesión</button>
+        <button class="btn primary btn-block" id="save-workout-btn">Guardar sesión</button>
         <div style="text-align:center;"><span id="save-workout-msg" class="msg"></span></div>
       </section>
 
@@ -125,7 +125,7 @@
 
         <div id="routine-editor" style="display:none;">
           <div class="routine-editor-header">
-            <button class="btn small ghost" id="routine-editor-back-btn">← Volver</button>
+            <button class="btn small ghost" id="routine-editor-back-btn">Volver</button>
             <h2 id="routine-editor-title">Nueva rutina</h2>
             <button class="btn primary small" id="save-routine-btn">Guardar</button>
           </div>
@@ -210,15 +210,15 @@
         <div class="panel">
           <h2>Copia de seguridad</h2>
           <p class="hint">Todos tus datos se guardan localmente en este dispositivo. Exporta una copia de vez en cuando por si acaso, o para pasarlos a otro dispositivo.</p>
-          <button class="btn" id="export-btn">⬇️ Exportar datos (JSON)</button>
-          <label class="btn" for="import-file">⬆️ Importar datos</label>
+          <button class="btn" id="export-btn">Exportar datos (JSON)</button>
+          <label class="btn" for="import-file">Importar datos</label>
           <input type="file" id="import-file" accept="application/json" style="display:none">
           <span id="backup-msg" class="msg"></span>
         </div>
 
         <div class="panel danger">
           <h2>Zona peligrosa</h2>
-          <button class="btn danger" id="reset-btn">🗑️ Borrar todos los datos</button>
+          <button class="btn danger" id="reset-btn">Borrar todos los datos</button>
         </div>
       </section>
 
@@ -237,12 +237,12 @@
 </div>
 
 <script src="js/vendor/chart.umd.js"></script>
-<script src="js/icons.js?v=10"></script>
-<script src="js/storage.js?v=10"></script>
-<script src="js/seed-exercises.js?v=10"></script>
-<script src="js/exercise-picker.js?v=10"></script>
-<script src="js/workouts.js?v=10"></script>
-<script src="js/routines.js?v=10"></script>
-<script src="js/app.js?v=10"></script>
+<script src="js/icons.js?v=11"></script>
+<script src="js/storage.js?v=11"></script>
+<script src="js/seed-exercises.js?v=11"></script>
+<script src="js/exercise-picker.js?v=11"></script>
+<script src="js/workouts.js?v=11"></script>
+<script src="js/routines.js?v=11"></script>
+<script src="js/app.js?v=11"></script>
 </body>
 </html>

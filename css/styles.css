@@ -102,7 +102,7 @@ body {
   align-items: center;
   gap: 8px;
 }
-.brand-mark { font-size: 1.25rem; }
+.brand-mark { display: flex; color: var(--accent); }
 
 .theme-toggle {
   background: var(--bg-card);
@@ -255,7 +255,7 @@ h3 { font-size: 0.85rem; color: var(--text-dim); text-transform: uppercase; lett
   gap: 2px;
 }
 
-.card-label { font-size: 0.7rem; color: var(--text-dim); font-weight: 600; }
+.card-label { display: flex; align-items: center; gap: 5px; font-size: 0.7rem; color: var(--text-dim); font-weight: 600; }
 .card-value { font-size: 1.5rem; font-weight: 800; color: var(--text); line-height: 1.2; }
 .card-sub { font-size: 0.68rem; color: var(--text-dim); }
 
@@ -310,7 +310,9 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
   cursor: pointer;
   font-size: 0.88rem;
   font-weight: 600;
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
   margin-right: 6px;
   margin-top: 4px;
   transition: all .15s;
@@ -320,8 +322,8 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
 .btn.primary:hover { filter: brightness(1.08); }
 .btn.ghost { background: transparent; }
 .btn.danger { background: transparent; border-color: var(--danger); color: var(--danger); }
-.btn.small { padding: 6px 12px; font-size: 0.8rem; }
-.btn-block { display: block; width: 100%; text-align: center; margin: 6px 0 4px; padding: 13px; font-size: 0.95rem; }
+.btn.small { padding: 6px 12px; font-size: 0.8rem; gap: 5px; }
+.btn-block { display: inline-flex; justify-content: center; width: 100%; text-align: center; margin: 6px 0 4px; padding: 13px; font-size: 0.95rem; }
 
 .icon-btn {
   background: transparent;
@@ -331,6 +333,9 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
   font-size: 0.9rem;
   padding: 4px 8px;
   flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
 }
 .icon-btn:hover { color: var(--danger); }
 
@@ -467,7 +472,7 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
 }
 .session-stat { display: flex; flex-direction: column; gap: 2px; }
 .session-stat strong { font-size: 0.95rem; }
-.pr-count { color: var(--gold); }
+.pr-count { display: inline-flex; align-items: center; gap: 4px; color: var(--gold); }
 
 .session-exercises { display: flex; flex-direction: column; gap: 14px; }
 .exercise-view-block { }
@@ -483,7 +488,7 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
 }
 .set-view-row .set-num { position: relative; margin-left: -40px; }
 .set-view-row span:nth-child(2) { color: var(--text); }
-.pr-badge { margin-left: auto; }
+.pr-badge { margin-left: auto; color: var(--gold); display: inline-flex; }
 
 .routine-avatars { display: flex; gap: 6px; margin-bottom: 12px; }
 .routine-actions { display: flex; gap: 8px; flex-wrap: wrap; }
@@ -539,7 +544,17 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
   color: var(--text);
 }
 .routine-quick-btn:hover { border-color: var(--accent); }
-.routine-quick-btn-icon { font-size: 1.1rem; }
+.routine-quick-btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  color: var(--accent);
+  flex-shrink: 0;
+}
 .routine-quick-btn strong { display: block; font-size: 0.92rem; }
 
 /* ---- Rutinas: editor simplificado (sin peso/reps) ---- */

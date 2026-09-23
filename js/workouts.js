@@ -1,11 +1,12 @@
-/* Lógica y render de la pestaña Entrenamiento */
+/* Lógica y render de la pestaña Entrenamiento: explorar rutinas, sesión activa y biblioteca */
 
 const MUSCLE_GROUPS = ['Pecho', 'Espalda', 'Hombro', 'Bíceps', 'Tríceps', 'Pierna', 'Core', 'Antebrazo', 'Full Body', 'Cardio', 'Otro'];
 const EQUIPMENT_TYPES = ['Barra', 'Mancuernas', 'Máquina', 'Polea', 'Peso corporal', 'Smith', 'Kettlebell', 'Banda elástica', 'Cardio', 'Otro'];
 
 const Workouts = (() => {
-  let currentSessionExercises = []; // [{exerciseId, sets: [{weight, reps}]}]
+  let currentSessionExercises = []; // [{exerciseId, note, restSeconds, sets: [{weight, reps, done}]}]
   let sessionStartAt = null;
+  let sessionTimerInterval = null;
   let logExercisePicker = null;
   let progressExerciseId = null;
   let progressPicker = null;
@@ -27,19 +28,94 @@ const Workouts = (() => {
     return h > 0 ? `${h}h ${m}min` : `${m}min`;
   }
 
+  function formatElapsed(ms) {
+    const totalSec = Math.max(0, Math.floor(ms / 1000));
+    if (totalSec < 60) return `${totalSec}s`;
+    const totalMin = Math.floor(totalSec / 60);
+    if (totalMin < 60) return `${totalMin}min`;
+    const h = Math.floor(totalMin / 60);
+    const m = totalMin % 60;
+    return `${h}h ${m}min`;
+  }
+
   function fillSelectOptions(sel, options) {
     sel.innerHTML = options.map(o => `<option value="${o}">${o}</option>`).join('');
   }
 
-  function initLogForm() {
-    document.getElementById('workout-date').value = todayStr();
+  // ---------------- Navegación entre vistas de la pestaña ----------------
+
+  function showView(view) {
+    document.getElementById('workout-browse').style.display = view === 'browse' ? 'block' : 'none';
+    document.getElementById('active-session').style.display = view === 'session' ? 'block' : 'none';
+    document.getElementById('workout-library').style.display = view === 'library' ? 'block' : 'none';
+    document.getElementById('routine-editor').style.display = view === 'editor' ? 'block' : 'none';
+    document.getElementById('app').classList.toggle('wide', view === 'editor');
+
+    if (view === 'browse') Routines.renderList();
+    if (view === 'library') renderExerciseList();
+    if (view === 'session') {
+      renderActiveSession();
+      startSessionTimer();
+    } else {
+      stopSessionTimer();
+    }
+  }
+
+  function showBrowseOrResume() {
+    showView(sessionStartAt ? 'session' : 'browse');
+  }
+
+  function startSessionTimer() {
+    stopSessionTimer();
+    sessionTimerInterval = setInterval(renderSessionStats, 1000);
+  }
+  function stopSessionTimer() {
+    if (sessionTimerInterval) clearInterval(sessionTimerInterval);
+    sessionTimerInterval = null;
+  }
+
+  // ---------------- Sesión activa ----------------
+
+  function resetSession() {
     currentSessionExercises = [];
     sessionStartAt = null;
-    renderCurrentSession();
-    renderStartFromRoutineSelect();
-    fillSelectOptions(document.getElementById('inline-ex-group'), MUSCLE_GROUPS);
-    fillSelectOptions(document.getElementById('inline-ex-equipment'), EQUIPMENT_TYPES);
-    mountLogExercisePicker();
+    document.getElementById('workout-date').value = todayStr();
+    document.getElementById('workout-name').value = '';
+  }
+
+  function ensureSessionStarted() {
+    if (!sessionStartAt) sessionStartAt = Date.now();
+  }
+
+  function startEmpty() {
+    resetSession();
+    ensureSessionStarted();
+    showView('session');
+    if (logExercisePicker) logExercisePicker.refresh();
+  }
+
+  // Devuelve los últimos sets realizados para un ejercicio (referencia "ANTERIOR")
+  function getLastPerformance(exerciseId) {
+    const workouts = Storage.getWorkouts(); // ya viene ordenado por fecha desc
+    for (const w of workouts) {
+      const entry = w.entries.find(e => e.exerciseId === exerciseId);
+      if (entry && entry.sets.length) return entry.sets;
+    }
+    return null;
+  }
+
+  function startFromRoutine(routine) {
+    resetSession();
+    currentSessionExercises = routine.exercises.map(re => ({
+      exerciseId: re.exerciseId,
+      note: re.note || '',
+      restSeconds: re.restSeconds || 90,
+      sets: Array.from({ length: re.targetSets || 1 }, () => ({ weight: '', reps: '', done: false })),
+    }));
+    ensureSessionStarted();
+    document.getElementById('workout-name').value = routine.name;
+    showView('session');
+    if (logExercisePicker) logExercisePicker.refresh();
   }
 
   function mountLogExercisePicker() {
@@ -56,115 +132,18 @@ const Workouts = (() => {
     });
   }
 
-  function renderStartFromRoutineSelect() {
-    const panel = document.getElementById('quick-start-panel');
-    const container = document.getElementById('quick-start-routines');
-    const routines = Storage.getRoutines();
-    if (routines.length === 0) {
-      panel.style.display = 'none';
-      return;
-    }
-    panel.style.display = 'block';
-    container.innerHTML = routines.map(r => `
-      <button type="button" class="routine-quick-btn" data-routine-id="${r.id}">
-        <span class="routine-quick-btn-icon">${icon('play', 16)}</span>
-        <span>
-          <strong>${escapeHtml(r.name)}</strong>
-          <span class="hint">${r.exercises.length} ejercicios</span>
-        </span>
-      </button>
-    `).join('');
-    container.querySelectorAll('[data-routine-id]').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const routine = Storage.getRoutines().find(r => r.id === btn.dataset.routineId);
-        if (routine) startFromRoutine(routine);
-      });
-    });
-  }
-
-  // Devuelve los últimos sets realizados para un ejercicio (para pre-rellenar "peso previo")
-  function getLastPerformance(exerciseId) {
-    const workouts = Storage.getWorkouts(); // ya viene ordenado por fecha desc
-    for (const w of workouts) {
-      const entry = w.entries.find(e => e.exerciseId === exerciseId);
-      if (entry && entry.sets.length) return entry.sets;
-    }
-    return null;
-  }
-
-  function startFromRoutine(routine) {
-    currentSessionExercises = routine.exercises.map(re => {
-      const last = getLastPerformance(re.exerciseId);
-      const count = re.targetSets || 1;
-      const sets = Array.from({ length: count }, (_, i) => {
-        const src = last ? (last[i] || last[last.length - 1]) : null;
-        return { weight: src ? src.weight : '', reps: src ? src.reps : '' };
-      });
-      return { exerciseId: re.exerciseId, sets };
-    });
-    if (!sessionStartAt) sessionStartAt = Date.now();
-    document.getElementById('workout-name').value = routine.name;
-    renderCurrentSession();
-    if (logExercisePicker) logExercisePicker.refresh();
-  }
-
-  function renderCurrentSession() {
-    const container = document.getElementById('current-session-exercises');
-    if (currentSessionExercises.length === 0) {
-      container.innerHTML = '<p class="hint empty-hint">Añade tu primer ejercicio abajo, o carga una rutina.</p>';
-      return;
-    }
-    const exercises = Storage.getExercises();
-    container.innerHTML = currentSessionExercises.map((entry, exIdx) => {
-      const ex = exercises.find(e => e.id === entry.exerciseId);
-      const setsHtml = entry.sets.map((s, setIdx) => `
-        <div class="set-row">
-          <span class="set-num">${setIdx + 1}</span>
-          <input type="number" step="0.5" min="0" inputmode="decimal" placeholder="kg" value="${s.weight ?? ''}"
-            onchange="Workouts.updateSet(${exIdx}, ${setIdx}, 'weight', this.value)">
-          <input type="number" step="1" min="0" inputmode="numeric" placeholder="reps" value="${s.reps ?? ''}"
-            onchange="Workouts.updateSet(${exIdx}, ${setIdx}, 'reps', this.value)">
-          <button class="icon-btn" onclick="Workouts.removeSet(${exIdx}, ${setIdx})">✕</button>
-        </div>
-      `).join('');
-      return `
-        <div class="panel exercise-card">
-          <div class="exercise-card-header">
-            ${exerciseAvatarHtml(ex ? ex.group : 'Otro')}
-            <div class="exercise-card-title">
-              <strong>${ex ? ex.name : 'Ejercicio eliminado'}</strong>
-              <span class="hint">${ex ? ex.equipment : ''}</span>
-            </div>
-            <button class="icon-btn" onclick="Workouts.removeExerciseFromSession(${exIdx})">✕</button>
-          </div>
-          <div class="set-row set-row-header">
-            <span>SET</span><span>kg</span><span>reps</span><span></span>
-          </div>
-          ${setsHtml}
-          <button class="btn small ghost" onclick="Workouts.addSet(${exIdx})">+ Añadir serie</button>
-        </div>
-      `;
-    }).join('');
-  }
-
   function addExerciseToSession(exerciseId) {
     if (!exerciseId) return;
     if (currentSessionExercises.some(e => e.exerciseId === exerciseId)) return;
-    if (!sessionStartAt) sessionStartAt = Date.now();
-    const last = getLastPerformance(exerciseId);
-    const src = last ? last[0] : null;
-    currentSessionExercises.push({ exerciseId, sets: [{ weight: src ? src.weight : '', reps: src ? src.reps : '' }] });
-    renderCurrentSession();
+    ensureSessionStarted();
+    currentSessionExercises.push({ exerciseId, note: '', restSeconds: 90, sets: [{ weight: '', reps: '', done: false }] });
+    renderActiveSession();
     if (logExercisePicker) logExercisePicker.refresh();
   }
 
   function addSet(exIdx) {
-    const prevSet = currentSessionExercises[exIdx].sets.at(-1);
-    currentSessionExercises[exIdx].sets.push({
-      weight: prevSet ? prevSet.weight : '',
-      reps: prevSet ? prevSet.reps : '',
-    });
-    renderCurrentSession();
+    currentSessionExercises[exIdx].sets.push({ weight: '', reps: '', done: false });
+    renderActiveSession();
   }
 
   function removeSet(exIdx, setIdx) {
@@ -172,18 +151,112 @@ const Workouts = (() => {
     if (currentSessionExercises[exIdx].sets.length === 0) {
       currentSessionExercises.splice(exIdx, 1);
     }
-    renderCurrentSession();
+    renderActiveSession();
     if (logExercisePicker) logExercisePicker.refresh();
   }
 
   function removeExerciseFromSession(exIdx) {
     currentSessionExercises.splice(exIdx, 1);
-    renderCurrentSession();
+    renderActiveSession();
     if (logExercisePicker) logExercisePicker.refresh();
   }
 
   function updateSet(exIdx, setIdx, field, value) {
     currentSessionExercises[exIdx].sets[setIdx][field] = value === '' ? '' : Number(value);
+    renderActiveSession();
+  }
+
+  function toggleSetDone(exIdx, setIdx) {
+    const set = currentSessionExercises[exIdx].sets[setIdx];
+    set.done = !set.done;
+    renderActiveSession();
+  }
+
+  function updateNote(exIdx, value) {
+    currentSessionExercises[exIdx].note = value;
+  }
+
+  function updateRest(exIdx, value) {
+    currentSessionExercises[exIdx].restSeconds = Number(value);
+  }
+
+  function sessionTotals() {
+    let volume = 0, sets = 0;
+    currentSessionExercises.forEach(entry => {
+      entry.sets.forEach(s => {
+        if (s.weight !== '' && s.reps !== '') { volume += s.weight * s.reps; sets++; }
+      });
+    });
+    return { volume, sets };
+  }
+
+  function renderSessionStats() {
+    const el = document.getElementById('session-stats');
+    if (!el) return;
+    const elapsed = sessionStartAt ? Date.now() - sessionStartAt : 0;
+    const { volume, sets } = sessionTotals();
+    el.innerHTML = `
+      <div class="session-stat-plain"><span class="hint">Duración</span><strong>${formatElapsed(elapsed)}</strong></div>
+      <div class="session-stat-plain"><span class="hint">Volumen</span><strong>${Math.round(volume).toLocaleString('es-ES')} kg</strong></div>
+      <div class="session-stat-plain"><span class="hint">Series</span><strong>${sets}</strong></div>
+    `;
+  }
+
+  function exerciseSessionCardHtml(entry, exIdx) {
+    const ex = Storage.getExercises().find(e => e.id === entry.exerciseId);
+    const last = getLastPerformance(entry.exerciseId);
+    const setsHtml = entry.sets.map((s, setIdx) => {
+      const prevSet = last ? (last[setIdx] || last[last.length - 1]) : null;
+      const filled = s.weight !== '' && s.reps !== '';
+      const actionBtn = filled
+        ? `<button type="button" class="set-check ${s.done ? 'done' : ''}" onclick="Workouts.toggleSetDone(${exIdx},${setIdx})">${icon('check', 14)}</button>`
+        : `<button type="button" class="set-check remove" onclick="Workouts.removeSet(${exIdx},${setIdx})">${icon('x', 14)}</button>`;
+      return `
+        <div class="set-row ${s.done ? 'set-row-done' : ''}">
+          <span class="set-num">${setIdx + 1}</span>
+          <span class="set-prev">${prevSet ? `${prevSet.weight}kg × ${prevSet.reps}` : '—'}</span>
+          <input type="number" step="0.5" min="0" inputmode="decimal" placeholder="kg" value="${s.weight ?? ''}"
+            onchange="Workouts.updateSet(${exIdx}, ${setIdx}, 'weight', this.value)">
+          <input type="number" step="1" min="0" inputmode="numeric" placeholder="reps" value="${s.reps ?? ''}"
+            onchange="Workouts.updateSet(${exIdx}, ${setIdx}, 'reps', this.value)">
+          ${actionBtn}
+        </div>
+      `;
+    }).join('');
+
+    return `
+      <div class="panel exercise-card">
+        <div class="exercise-card-header">
+          ${exerciseAvatarHtml(ex ? ex.group : 'Otro')}
+          <div class="exercise-card-title"><strong>${ex ? escapeHtml(ex.name) : 'Ejercicio eliminado'}</strong></div>
+          <button type="button" class="icon-btn" onclick="Workouts.removeExerciseFromSession(${exIdx})">${icon('trash', 16)}</button>
+        </div>
+        <input type="text" class="exercise-note-input" placeholder="Agregar notas aquí..." value="${escapeHtml(entry.note || '')}"
+          onchange="Workouts.updateNote(${exIdx}, this.value)">
+        <div class="rest-row">
+          ${icon('clock', 14)}
+          <span>Descanso:</span>
+          <select onchange="Workouts.updateRest(${exIdx}, this.value)">
+            ${REST_OPTIONS.map(o => `<option value="${o.value}" ${Number(entry.restSeconds) === o.value ? 'selected' : ''}>${o.label}</option>`).join('')}
+          </select>
+        </div>
+        <div class="set-row set-row-header">
+          <span>Nº</span><span>ANTERIOR</span><span>KG</span><span>REPS</span><span></span>
+        </div>
+        ${setsHtml}
+        <button type="button" class="btn small ghost btn-add-set" onclick="Workouts.addSet(${exIdx})">${icon('plus', 14)}<span>Añadir serie</span></button>
+      </div>
+    `;
+  }
+
+  function renderActiveSession() {
+    renderSessionStats();
+    const container = document.getElementById('session-exercises-list');
+    if (currentSessionExercises.length === 0) {
+      container.innerHTML = '<p class="hint empty-hint">Añade tu primer ejercicio abajo.</p>';
+      return;
+    }
+    container.innerHTML = currentSessionExercises.map((entry, exIdx) => exerciseSessionCardHtml(entry, exIdx)).join('');
   }
 
   function saveCurrentWorkout() {
@@ -194,7 +267,8 @@ const Workouts = (() => {
     const cleanEntries = currentSessionExercises
       .map(entry => ({
         exerciseId: entry.exerciseId,
-        sets: entry.sets.filter(s => s.weight !== '' && s.reps !== ''),
+        note: entry.note || '',
+        sets: entry.sets.filter(s => s.weight !== '' && s.reps !== '').map(s => ({ weight: s.weight, reps: s.reps })),
       }))
       .filter(entry => entry.sets.length > 0);
 
@@ -206,10 +280,8 @@ const Workouts = (() => {
 
     const durationMin = sessionStartAt ? Math.max(1, Math.round((Date.now() - sessionStartAt) / 60000)) : null;
     Storage.addWorkout({ date, name, entries: cleanEntries, durationMin });
-    msg.textContent = '¡Sesión guardada!';
-    msg.className = 'msg success';
-    initLogForm();
-    setTimeout(() => { msg.textContent = ''; }, 2500);
+    resetSession();
+    showView('browse');
     App.refreshDashboard();
   }
 
@@ -296,7 +368,7 @@ const Workouts = (() => {
     const workouts = Storage.getWorkouts();
     const exercises = Storage.getExercises();
     if (workouts.length === 0) {
-      container.innerHTML = '<p class="hint empty-hint">Aún no has registrado ninguna sesión. ¡Empieza en "Registrar"!</p>';
+      container.innerHTML = '<p class="hint empty-hint">Aún no has registrado ninguna sesión. ¡Empieza en "Entrenamiento"!</p>';
       return;
     }
     container.innerHTML = workouts.map(w => sessionCardHtml(w, workouts, exercises)).join('');
@@ -503,6 +575,10 @@ const Workouts = (() => {
   }
 
   function bindEvents() {
+    document.getElementById('start-empty-btn').addEventListener('click', startEmpty);
+    document.getElementById('session-back-btn').addEventListener('click', () => showView('browse'));
+    document.getElementById('explore-exercises-btn').addEventListener('click', () => showView('library'));
+    document.getElementById('library-back-btn').addEventListener('click', () => showView('browse'));
     document.getElementById('save-workout-btn').addEventListener('click', saveCurrentWorkout);
     document.getElementById('add-new-exercise-btn').addEventListener('click', addExerciseFromForm);
     document.getElementById('inline-ex-save-btn').addEventListener('click', saveInlineNewExercise);
@@ -514,16 +590,17 @@ const Workouts = (() => {
   function init() {
     renderExerciseFilterSelects();
     bindEvents();
-    initLogForm();
+    resetSession();
+    mountLogExercisePicker();
     renderHistory();
     mountProgressPicker();
     renderExerciseList();
   }
 
   return {
-    init, initLogForm, renderHistory, renderProgress, renderExerciseList, startFromRoutine, getLastPerformance,
-    addSet, removeSet, removeExerciseFromSession, updateSet, deleteWorkout, removeExercise, addExerciseToSession,
-    renderStartFromRoutineSelect, epley1RM, computeWorkoutRecords, sessionVolume, sessionReps, formatDuration, sessionCardHtml,
+    init, showView, showBrowseOrResume, renderHistory, renderProgress, renderExerciseList, startFromRoutine, getLastPerformance,
+    addSet, removeSet, removeExerciseFromSession, updateSet, toggleSetDone, updateNote, updateRest, deleteWorkout, removeExercise, addExerciseToSession,
+    epley1RM, computeWorkoutRecords, sessionVolume, sessionReps, formatDuration, sessionCardHtml,
     rerenderChartTheme,
   };
 })();

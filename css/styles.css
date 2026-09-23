@@ -225,8 +225,43 @@ body {
 .segmented-scroll::-webkit-scrollbar { display: none; }
 .segmented-scroll .segmented-btn { flex-shrink: 0; }
 
-.workout-seg, .info-mode, .profile-detail-panel { display: none; }
-.workout-seg.active, .info-mode.active, .profile-detail-panel.active { display: block; }
+.info-mode, .profile-detail-panel { display: none; }
+.info-mode.active, .profile-detail-panel.active { display: block; }
+
+/* ---- Kebab menu (⋯) reutilizable: carpetas, rutinas ---- */
+.kebab { position: relative; }
+.kebab > summary { list-style: none; cursor: pointer; }
+.kebab > summary::-webkit-details-marker { display: none; }
+.kebab-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 4px);
+  background: var(--bg-card-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 4px;
+  min-width: 150px;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .35);
+}
+.kebab-menu button {
+  background: none;
+  border: none;
+  color: var(--text);
+  text-align: left;
+  padding: 9px 10px;
+  border-radius: 7px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.kebab-menu button:hover { background: var(--bg-card); }
+.kebab-menu button.danger-item { color: var(--danger); }
 
 /* Perfil: título sobre la gráfica + cuadrícula de accesos */
 .chart-headline { font-size: 1.4rem; font-weight: 800; margin-bottom: 10px; }
@@ -498,14 +533,15 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
   margin-bottom: 10px;
 }
 .exercise-card-title { flex: 1; display: flex; flex-direction: column; }
-.exercise-card-title strong { font-size: 0.95rem; }
+.exercise-card-title strong { font-size: 0.95rem; color: var(--accent); }
 
 .set-row {
   display: grid;
-  grid-template-columns: 24px 1fr 1fr 26px;
+  grid-template-columns: 24px 1fr 58px 58px 32px;
   gap: 6px;
   align-items: center;
   margin-bottom: 6px;
+  padding: 3px 4px;
 }
 .set-row-header { color: var(--text-dim); font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; }
 .set-num {
@@ -553,8 +589,6 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
 .set-view-row span:nth-child(2) { color: var(--text); }
 .pr-badge { margin-left: auto; color: var(--gold); display: inline-flex; }
 
-.routine-avatars { display: flex; gap: 6px; margin-bottom: 12px; }
-.routine-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
 .progress-selected {
   display: flex;
@@ -591,34 +625,126 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
 
 .chart-wrap { height: 300px; margin-top: 12px; }
 
-/* ---- Registrar: empezar rápido desde una rutina ---- */
-.quick-start-routines { display: flex; flex-direction: column; gap: 8px; }
-.routine-quick-btn {
+/* ---- Entrenamiento: explorar (botón empezar vacío + rutinas) ---- */
+.start-empty-btn {
   display: flex;
   align-items: center;
   gap: 12px;
-  background: var(--bg-card);
+  width: 100%;
+  background: var(--bg-panel);
   border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 12px 14px;
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 22px;
+  color: var(--text);
+  font-size: 0.95rem;
+  font-weight: 700;
   cursor: pointer;
   text-align: left;
-  width: 100%;
-  color: var(--text);
 }
-.routine-quick-btn:hover { border-color: var(--accent); }
-.routine-quick-btn-icon {
+.start-empty-btn:hover { border-color: var(--accent); }
+.start-empty-icon {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
-  background: color-mix(in srgb, var(--accent) 15%, transparent);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
   color: var(--accent);
   flex-shrink: 0;
 }
-.routine-quick-btn strong { display: block; font-size: 0.92rem; }
+
+.section-header-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.section-header-row h3 { margin: 0; }
+
+.routine-pill-actions { display: flex; gap: 10px; margin-bottom: 18px; }
+.pill-action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 11px 10px;
+  color: var(--text);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+.pill-action-btn:hover { border-color: var(--accent); }
+
+/* ---- Entrenamiento: sesión activa ---- */
+.session-header { display: flex; align-items: center; gap: 10px; margin-bottom: 2px; }
+.session-title-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  font-size: 1.15rem;
+  font-weight: 800;
+  padding: 6px 2px;
+}
+.session-title-input:focus { outline: none; }
+.session-subheader { margin-bottom: 10px; }
+.session-date-input {
+  width: auto;
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 0;
+}
+.session-date-input:focus { outline: none; }
+
+.session-stats-row-plain {
+  display: flex;
+  gap: 26px;
+  padding: 12px 0 16px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+.session-stat-plain { display: flex; flex-direction: column; gap: 2px; }
+.session-stat-plain strong { font-size: 1.05rem; }
+
+.exercise-note-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  border-bottom: 1px dashed var(--border);
+  padding: 4px 2px 9px;
+  font-size: 0.85rem;
+  color: var(--text);
+  margin-bottom: 10px;
+  border-radius: 0;
+}
+.exercise-note-input:focus { outline: none; border-color: var(--accent); }
+.exercise-note-input::placeholder { color: var(--text-dim); }
+
+.rest-row { display: flex; align-items: center; gap: 6px; font-size: 0.82rem; color: var(--text-dim); margin-bottom: 12px; }
+.rest-row select { width: auto; background: transparent; border: none; color: var(--accent); font-weight: 700; padding: 2px 0; font-size: 0.82rem; }
+.rest-row select:focus { outline: none; }
+
+.set-prev { color: var(--text-dim); font-size: 0.76rem; }
+.set-check {
+  width: 30px;
+  height: 30px;
+  min-width: 30px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg-card);
+  color: var(--text-dim);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.set-check.done { background: var(--accent); border-color: var(--accent); color: var(--btn-primary-text); }
+.set-check.remove:hover { border-color: var(--danger); color: var(--danger); }
+.set-row-done { background: color-mix(in srgb, var(--accent) 7%, transparent); border-radius: var(--radius-sm); }
+.btn-add-set { width: 100%; justify-content: center; margin-top: 4px; }
 
 /* ---- Rutinas: editor simplificado (sin peso/reps) ---- */
 .routine-mini-row { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 4px; }
@@ -641,24 +767,34 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
 .stepper span { min-width: 18px; text-align: center; font-weight: 700; color: var(--text); }
 
 /* ---- Rutinas: lista con carpetas ---- */
-.routines-toolbar { display: flex; gap: 8px; margin-bottom: 14px; }
-
 .routine-folder { margin-bottom: 14px; }
 .routine-folder-header {
   display: flex;
   align-items: center;
+  gap: 4px;
+  padding: 6px 0;
+}
+.folder-toggle {
+  flex: 1;
+  display: flex;
+  align-items: center;
   gap: 8px;
-  padding: 10px 4px;
+  background: none;
+  border: none;
+  color: var(--text);
+  padding: 6px 4px;
   cursor: pointer;
+  text-align: left;
+  font: inherit;
   user-select: none;
 }
-.folder-chevron { color: var(--text-dim); width: 14px; }
-.folder-actions { margin-left: auto; display: flex; gap: 2px; }
+.folder-chevron { color: var(--text-dim); display: flex; flex-shrink: 0; }
 .routine-folder-body { display: flex; flex-direction: column; gap: 12px; padding-left: 4px; }
 
 .routine-card { }
-.routine-card-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
-.routine-card-names { margin: 4px 0 2px; }
+.routine-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; gap: 8px; }
+.routine-card-top .session-name { flex: 1; }
+.routine-card-names { margin: 0 0 14px; }
 
 /* ---- Rutinas: editor ---- */
 .routine-editor-header {
@@ -727,7 +863,7 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
 @media (max-width: 640px) {
   .grid.cards { grid-template-columns: repeat(2, 1fr); }
   .form-row-pair { grid-template-columns: 1fr; }
-  .set-row { grid-template-columns: 22px 1fr 1fr 22px; }
+  .set-row { grid-template-columns: 20px 1fr 50px 50px 28px; gap: 4px; }
   .list-item { flex-direction: column; align-items: stretch; }
   .ex-picker-library .ex-picker-filters { flex-direction: column; }
 }

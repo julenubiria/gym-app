@@ -389,7 +389,7 @@ const Profile = (() => {
     });
     document.getElementById('profile-exercises-shortcut').addEventListener('click', () => {
       App.switchPage('workout');
-      App.switchWorkoutSegment('exercises');
+      Workouts.showView('library');
     });
     document.getElementById('profile-detail-back-btn').addEventListener('click', showMain);
 

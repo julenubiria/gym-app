@@ -1,4 +1,4 @@
-/* Lógica y render de la subpestaña "Rutinas": lista con carpetas + editor estilo Hevy.
+/* Lógica y render de "Rutinas": lista con carpetas + editor estilo Hevy.
  * Las rutinas solo guardan qué ejercicios y cuántas series planeadas, no peso ni reps:
  * eso se rellena durante la sesión real. */
 
@@ -22,6 +22,17 @@ const Routines = (() => {
 
   // ---------------- Browse (lista + carpetas) ----------------
 
+  function kebabHtml(items) {
+    return `
+      <details class="kebab">
+        <summary class="icon-btn">${icon('moreHorizontal', 18)}</summary>
+        <div class="kebab-menu">
+          ${items.map(it => `<button type="button" class="${it.danger ? 'danger-item' : ''}" data-${it.action}="${it.id}">${icon(it.icon, 15)}<span>${it.label}</span></button>`).join('')}
+        </div>
+      </details>
+    `;
+  }
+
   function renderGroups() {
     const container = document.getElementById('routines-groups');
     const routines = Storage.getRoutines();
@@ -29,7 +40,7 @@ const Routines = (() => {
     const exercises = Storage.getExercises();
 
     if (routines.length === 0 && folders.length === 0) {
-      container.innerHTML = '<p class="hint empty-hint">Todavía no has creado ninguna rutina. Pulsa "+ Nueva rutina" para empezar.</p>';
+      container.innerHTML = '<p class="hint empty-hint">Todavía no has creado ninguna rutina. Pulsa "Nueva rutina" para empezar.</p>';
       return;
     }
 
@@ -38,14 +49,16 @@ const Routines = (() => {
       const collapsed = collapsedFolders.has(folder.id);
       return `
         <div class="routine-folder">
-          <div class="routine-folder-header" data-toggle-folder="${folder.id}">
-            <span class="folder-chevron">${collapsed ? '▸' : '▾'}</span>
-            <strong>${escapeHtml(folder.name)}</strong>
-            <span class="hint">(${folderRoutines.length})</span>
-            <div class="folder-actions">
-              <button class="icon-btn" data-rename-folder="${folder.id}">${icon('edit', 15)}</button>
-              <button class="icon-btn" data-delete-folder="${folder.id}">${icon('trash', 15)}</button>
-            </div>
+          <div class="routine-folder-header">
+            <button type="button" class="folder-toggle" data-toggle-folder="${folder.id}">
+              <span class="folder-chevron">${icon(collapsed ? 'chevronRight' : 'chevronDown', 15)}</span>
+              <strong>${escapeHtml(folder.name)}</strong>
+              <span class="hint">(${folderRoutines.length})</span>
+            </button>
+            ${kebabHtml([
+              { action: 'rename-folder', id: folder.id, icon: 'edit', label: 'Renombrar' },
+              { action: 'delete-folder', id: folder.id, icon: 'trash', label: 'Eliminar', danger: true },
+            ])}
           </div>
           <div class="routine-folder-body" style="display:${collapsed ? 'none' : 'flex'}">
             ${folderRoutines.length ? folderRoutines.map(r => routineCardHtml(r, exercises)).join('') : '<p class="hint empty-hint">Sin rutinas en esta carpeta.</p>'}
@@ -55,14 +68,17 @@ const Routines = (() => {
     }).join('');
 
     const ungrouped = routines.filter(r => !r.folderId || !folders.some(f => f.id === r.folderId));
+    const ungroupedCollapsed = collapsedFolders.has('_none');
     const ungroupedHtml = `
       <div class="routine-folder">
-        <div class="routine-folder-header" data-toggle-folder="_none">
-          <span class="folder-chevron">${collapsedFolders.has('_none') ? '▸' : '▾'}</span>
-          <strong>Mis rutinas</strong>
-          <span class="hint">(${ungrouped.length})</span>
+        <div class="routine-folder-header">
+          <button type="button" class="folder-toggle" data-toggle-folder="_none">
+            <span class="folder-chevron">${icon(ungroupedCollapsed ? 'chevronRight' : 'chevronDown', 15)}</span>
+            <strong>Mis rutinas</strong>
+            <span class="hint">(${ungrouped.length})</span>
+          </button>
         </div>
-        <div class="routine-folder-body" style="display:${collapsedFolders.has('_none') ? 'none' : 'flex'}">
+        <div class="routine-folder-body" style="display:${ungroupedCollapsed ? 'none' : 'flex'}">
           ${ungrouped.length ? ungrouped.map(r => routineCardHtml(r, exercises)).join('') : '<p class="hint empty-hint">Sin rutinas todavía.</p>'}
         </div>
       </div>
@@ -72,28 +88,21 @@ const Routines = (() => {
   }
 
   function routineCardHtml(r, exercises) {
-    const avatars = r.exercises.slice(0, 6).map(re => {
-      const ex = exercises.find(x => x.id === re.exerciseId);
-      return exerciseAvatarHtml(ex ? ex.group : 'Otro', 'sm');
-    }).join('');
     const names = r.exercises.map(re => {
       const ex = exercises.find(x => x.id === re.exerciseId);
       return ex ? ex.name : '?';
     }).join(', ');
-    const totalSets = r.exercises.reduce((s, re) => s + (re.targetSets || 0), 0);
     return `
       <div class="panel routine-card">
         <div class="routine-card-top">
-          <div class="routine-avatars">${avatars}</div>
+          <strong class="session-name">${escapeHtml(r.name)}</strong>
+          ${kebabHtml([
+            { action: 'edit', id: r.id, icon: 'edit', label: 'Editar' },
+            { action: 'remove', id: r.id, icon: 'trash', label: 'Eliminar', danger: true },
+          ])}
         </div>
-        <strong class="session-name">${escapeHtml(r.name)}</strong>
-        <div class="hint routine-card-names">${escapeHtml(names)}</div>
-        <div class="hint">${r.exercises.length} ejercicios · ${totalSets} series</div>
-        <div class="routine-actions">
-          <button class="btn small primary" data-start="${r.id}">${icon('play', 15)}<span>Iniciar</span></button>
-          <button class="btn small ghost" data-edit="${r.id}">${icon('edit', 15)}<span>Editar</span></button>
-          <button class="icon-btn" data-remove="${r.id}">${icon('trash', 16)}</button>
-        </div>
+        <div class="hint routine-card-names">${escapeHtml(names) || 'Sin ejercicios todavía'}</div>
+        <button type="button" class="btn primary btn-block" data-start="${r.id}">${icon('play', 16)}<span>Empezar Rutina</span></button>
       </div>
     `;
   }
@@ -147,7 +156,6 @@ const Routines = (() => {
     const routine = Storage.getRoutines().find(r => r.id === id);
     if (!routine) return;
     App.switchPage('workout');
-    App.switchWorkoutSegment('log');
     Workouts.startFromRoutine(routine);
   }
 
@@ -208,29 +216,18 @@ const Routines = (() => {
       document.getElementById('routine-name').value = '';
       document.getElementById('routine-editor-title').textContent = 'Nueva rutina';
     }
-    document.getElementById('routines-browse').style.display = 'none';
-    document.getElementById('routine-editor').style.display = 'block';
-    document.getElementById('app').classList.add('wide');
-    document.querySelector('#page-workout .page-title').style.display = 'none';
+    Workouts.showView('editor');
     renderFolderSelect();
     renderEditorExercises();
     refreshPicker();
   }
 
   function closeEditor() {
-    document.getElementById('routine-editor').style.display = 'none';
-    document.getElementById('routines-browse').style.display = 'block';
-    document.getElementById('app').classList.remove('wide');
-    document.querySelector('#page-workout .page-title').style.display = '';
-    renderGroups();
+    Workouts.showView('browse');
   }
 
   function showBrowse() {
-    document.getElementById('routine-editor').style.display = 'none';
-    document.getElementById('routines-browse').style.display = 'block';
-    document.getElementById('app').classList.remove('wide');
-    document.querySelector('#page-workout .page-title').style.display = '';
-    renderGroups();
+    Workouts.showView('browse');
   }
 
   function renderSummary() {
@@ -345,7 +342,6 @@ const Routines = (() => {
     } else {
       Storage.addRoutine({ name, exercises: cleanExercises, folderId: editorFolderId });
     }
-    Workouts.renderStartFromRoutineSelect();
     closeEditor();
   }
 
@@ -366,7 +362,6 @@ const Routines = (() => {
     bindBrowseEvents();
     bindEditorEvents();
     mountPicker();
-    renderGroups();
   }
 
   return {

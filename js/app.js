@@ -25,15 +25,21 @@ const App = (() => {
 
   function renderStaticIcons() {
     document.querySelectorAll('.brand-mark').forEach(el => { el.innerHTML = icon('dumbbell', 20); });
+    const startEmptyIcon = document.querySelector('.start-empty-icon');
+    if (startEmptyIcon) startEmptyIcon.innerHTML = icon('plus', 18);
     const withIcon = {
-      'save-workout-btn': ['check', 'Guardar sesión'],
+      'new-folder-btn': ['folderPlus', ''],
+      'new-routine-btn': ['routines', 'Nueva rutina'],
+      'explore-exercises-btn': ['search', 'Explorar'],
+      'library-back-btn': ['chevronLeft', 'Volver'],
+      'session-back-btn': ['chevronDown', ''],
       'export-btn': ['download', 'Exportar datos (JSON)'],
       'reset-btn': ['trash', 'Borrar todos los datos'],
       'routine-editor-back-btn': ['chevronLeft', 'Volver'],
     };
     Object.entries(withIcon).forEach(([id, [iconName, label]]) => {
       const el = document.getElementById(id);
-      if (el) el.innerHTML = `${icon(iconName, 16)}<span>${label}</span>`;
+      if (el) el.innerHTML = label ? `${icon(iconName, 16)}<span>${label}</span>` : icon(iconName, 20);
     });
     const importLabel = document.querySelector('label[for="import-file"]');
     if (importLabel) importLabel.innerHTML = `${icon('upload', 16)}<span>Importar datos</span>`;
@@ -41,6 +47,14 @@ const App = (() => {
     const calNext = document.getElementById('calendar-next-btn');
     if (calPrev) calPrev.innerHTML = icon('chevronLeft', 18);
     if (calNext) calNext.innerHTML = icon('chevronRight', 18);
+  }
+
+  function bindGlobalKebabCloser() {
+    document.addEventListener('click', (e) => {
+      document.querySelectorAll('details.kebab[open]').forEach(d => {
+        if (!d.contains(e.target)) d.removeAttribute('open');
+      });
+    });
   }
 
   // ---------------- Navegación de páginas ----------------
@@ -51,28 +65,13 @@ const App = (() => {
     window.scrollTo(0, 0);
 
     if (pageName === 'dashboard') refreshDashboard();
-    if (pageName === 'workout') refreshActiveWorkoutSegment();
+    if (pageName === 'workout') Workouts.showBrowseOrResume();
     if (pageName === 'profile') Profile.showMain();
-  }
-
-  // ---- Entrenamiento: Registrar | Rutinas | Ejercicios ----
-  function switchWorkoutSegment(seg) {
-    document.querySelectorAll('#workout-segmented .segmented-btn').forEach(b => b.classList.toggle('active', b.dataset.seg === seg));
-    document.querySelectorAll('.workout-seg').forEach(p => p.classList.toggle('active', p.id === `workout-seg-${seg}`));
-    if (seg === 'routines') Routines.showBrowse();
-    if (seg === 'exercises') Workouts.renderExerciseList();
-  }
-  function refreshActiveWorkoutSegment() {
-    const activeBtn = document.querySelector('#workout-segmented .segmented-btn.active');
-    switchWorkoutSegment(activeBtn ? activeBtn.dataset.seg : 'log');
   }
 
   function bindNav() {
     document.querySelectorAll('[data-page]').forEach(btn => {
       btn.addEventListener('click', () => switchPage(btn.dataset.page));
-    });
-    document.querySelectorAll('#workout-segmented .segmented-btn').forEach(btn => {
-      btn.addEventListener('click', () => switchWorkoutSegment(btn.dataset.seg));
     });
   }
 
@@ -194,9 +193,11 @@ const App = (() => {
     renderNav();
     renderStaticIcons();
     bindNav();
+    bindGlobalKebabCloser();
     initTheme();
     Workouts.init();
     Routines.init();
+    Workouts.showView('browse');
     Profile.init();
     initSettingsForm();
     refreshDashboard();
@@ -225,7 +226,7 @@ const App = (() => {
     }).catch(() => {});
   }
 
-  return { init, switchPage, switchWorkoutSegment, refreshDashboard };
+  return { init, switchPage, refreshDashboard };
 })();
 
 document.addEventListener('DOMContentLoaded', App.init);

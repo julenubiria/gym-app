@@ -1,39 +1,60 @@
-/* App shell: navegación entre pestañas, dashboard y ajustes */
+/* App shell: navegación (sidebar en escritorio, barra inferior en móvil), dashboard y ajustes */
+
+const NAV_ITEMS = [
+  { page: 'dashboard', icon: 'home', label: 'Inicio' },
+  { page: 'routines', icon: 'routines', label: 'Rutinas' },
+  { page: 'log', icon: 'plusCircle', label: 'Registrar' },
+  { page: 'progress', icon: 'trending', label: 'Progreso' },
+  { page: 'exercises', icon: 'dumbbell', label: 'Ejercicios' },
+];
 
 const App = (() => {
-  function switchTab(tabName) {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tabName));
-    document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `tab-${tabName}`));
-    if (tabName === 'dashboard') refreshDashboard();
+  function renderNav() {
+    document.querySelectorAll('#sidebar-nav .nav-item').forEach(btn => {
+      const item = NAV_ITEMS.find(i => i.page === btn.dataset.page);
+      if (item) btn.innerHTML = `${icon(item.icon, 20)}<span>${item.label}</span>`;
+    });
+    document.querySelectorAll('.sidebar-footer .nav-item').forEach(btn => {
+      if (btn.dataset.page === 'settings') btn.innerHTML = `${icon('sliders', 20)}<span>Ajustes</span>`;
+    });
+    document.querySelectorAll('#bottom-nav .bottom-nav-item').forEach(btn => {
+      const item = NAV_ITEMS.find(i => i.page === btn.dataset.page);
+      if (item) btn.innerHTML = `${icon(item.icon, 22)}<span>${item.label}</span>`;
+    });
+    const settingsIconBtn = document.querySelector('.topbar-mobile [data-page="settings"]');
+    if (settingsIconBtn) settingsIconBtn.innerHTML = icon('sliders', 20);
   }
 
-  function switchSubtab(panelEl, subtabName) {
-    const subtabs = panelEl.querySelectorAll('.subtab-btn');
-    subtabs.forEach(b => b.classList.toggle('active', b.dataset.subtab === subtabName));
-    panelEl.querySelectorAll(':scope > .subtab-panel').forEach(p => p.classList.toggle('active', p.id.endsWith('-' + subtabName)));
+  function switchPage(pageName) {
+    document.querySelectorAll('[data-page]').forEach(el => el.classList.toggle('active', el.dataset.page === pageName));
+    document.querySelectorAll('.page').forEach(p => p.classList.toggle('active', p.id === `page-${pageName}`));
+    window.scrollTo(0, 0);
 
-    if (panelEl.id === 'tab-workouts') {
-      if (subtabName === 'routines') Routines.showBrowse();
-      if (subtabName === 'history') Workouts.renderHistory();
-      if (subtabName === 'exercises') Workouts.renderExerciseList();
-    }
+    if (pageName === 'dashboard') refreshDashboard();
+    if (pageName === 'routines') Routines.showBrowse();
+    if (pageName === 'exercises') Workouts.renderExerciseList();
+    if (pageName === 'progress') refreshProgressSegment();
   }
 
-  function switchWorkoutsSubtab(subtabName) {
-    const panelEl = document.getElementById('tab-workouts');
-    const btn = panelEl.querySelector(`.subtab-btn[data-subtab="${subtabName}"]`);
-    if (btn) btn.click();
-    else switchSubtab(panelEl, subtabName);
+  function refreshProgressSegment() {
+    const activeBtn = document.querySelector('#progress-segmented .segmented-btn.active');
+    const seg = activeBtn ? activeBtn.dataset.seg : 'history';
+    if (seg === 'history') Workouts.renderHistory();
+  }
+
+  function switchProgressSegment(seg) {
+    document.querySelectorAll('#progress-segmented .segmented-btn').forEach(b => b.classList.toggle('active', b.dataset.seg === seg));
+    document.getElementById('progress-seg-history').classList.toggle('active', seg === 'history');
+    document.getElementById('progress-seg-exercise').classList.toggle('active', seg === 'exercise');
+    if (seg === 'history') Workouts.renderHistory();
   }
 
   function bindNav() {
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-      btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+    document.querySelectorAll('[data-page]').forEach(btn => {
+      btn.addEventListener('click', () => switchPage(btn.dataset.page));
     });
-    document.querySelectorAll('.tab-panel').forEach(panel => {
-      panel.querySelectorAll('.subtab-btn').forEach(btn => {
-        btn.addEventListener('click', () => switchSubtab(panel, btn.dataset.subtab));
-      });
+    document.querySelectorAll('#progress-segmented .segmented-btn').forEach(btn => {
+      btn.addEventListener('click', () => switchProgressSegment(btn.dataset.seg));
     });
   }
 
@@ -111,7 +132,7 @@ const App = (() => {
     const recent = workouts.slice(0, 3);
     document.getElementById('dashboard-recent-workouts').innerHTML = recent.length
       ? recent.map(w => Workouts.sessionCardHtml(w, workouts, exercises)).join('')
-      : '<p class="hint empty-hint">Todavía no has registrado entrenamientos. ¡Empieza en la pestaña "Entrenamiento"!</p>';
+      : '<p class="hint empty-hint">Todavía no has registrado entrenamientos. ¡Empieza en "Registrar"!</p>';
   }
 
   function initSettingsForm() {
@@ -154,25 +175,27 @@ const App = (() => {
   }
 
   function initTheme() {
-    const btn = document.getElementById('theme-toggle-btn');
+    const btns = [document.getElementById('theme-toggle-btn'), document.getElementById('theme-toggle-btn-mobile')];
     function current() {
       return document.documentElement.getAttribute('data-theme') === 'light' ? 'light' : 'dark';
     }
     function applyIcon() {
-      btn.textContent = current() === 'light' ? '🌙' : '☀️';
+      const html = current() === 'light' ? icon('moon', 18) : icon('sun', 18);
+      btns.forEach(b => { if (b) b.innerHTML = html; });
     }
     applyIcon();
-    btn.addEventListener('click', () => {
+    btns.forEach(b => b && b.addEventListener('click', () => {
       const next = current() === 'light' ? 'dark' : 'light';
       document.documentElement.setAttribute('data-theme', next);
       try { localStorage.setItem('gymapp_theme', next); } catch (e) {}
       applyIcon();
       if (typeof Workouts !== 'undefined' && Workouts.rerenderChartTheme) Workouts.rerenderChartTheme();
-    });
+    }));
   }
 
   function init() {
     Storage.seedIfNeeded();
+    renderNav();
     bindNav();
     initTheme();
     Workouts.init();
@@ -204,7 +227,7 @@ const App = (() => {
     }).catch(() => {});
   }
 
-  return { init, switchTab, switchWorkoutsSubtab, refreshDashboard };
+  return { init, switchPage, refreshDashboard };
 })();
 
 document.addEventListener('DOMContentLoaded', App.init);

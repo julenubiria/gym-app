@@ -52,7 +52,7 @@ const App = (() => {
 
     if (pageName === 'dashboard') refreshDashboard();
     if (pageName === 'workout') refreshActiveWorkoutSegment();
-    if (pageName === 'profile') refreshActiveProfileSegment();
+    if (pageName === 'profile') Profile.showMain();
   }
 
   // ---- Entrenamiento: Registrar | Rutinas | Ejercicios ----
@@ -67,26 +67,12 @@ const App = (() => {
     switchWorkoutSegment(activeBtn ? activeBtn.dataset.seg : 'log');
   }
 
-  // ---- Perfil: Información | Estadísticas | Medidas | Calendario ----
-  function switchProfileSegment(seg) {
-    document.querySelectorAll('#profile-segmented .segmented-btn').forEach(b => b.classList.toggle('active', b.dataset.seg === seg));
-    document.querySelectorAll('.profile-seg').forEach(p => p.classList.toggle('active', p.id === `profile-seg-${seg}`));
-    if (typeof Profile !== 'undefined') Profile.onEnterSegment(seg);
-  }
-  function refreshActiveProfileSegment() {
-    const activeBtn = document.querySelector('#profile-segmented .segmented-btn.active');
-    switchProfileSegment(activeBtn ? activeBtn.dataset.seg : 'info');
-  }
-
   function bindNav() {
     document.querySelectorAll('[data-page]').forEach(btn => {
       btn.addEventListener('click', () => switchPage(btn.dataset.page));
     });
     document.querySelectorAll('#workout-segmented .segmented-btn').forEach(btn => {
       btn.addEventListener('click', () => switchWorkoutSegment(btn.dataset.seg));
-    });
-    document.querySelectorAll('#profile-segmented .segmented-btn').forEach(btn => {
-      btn.addEventListener('click', () => switchProfileSegment(btn.dataset.seg));
     });
   }
 
@@ -239,7 +225,7 @@ const App = (() => {
     }).catch(() => {});
   }
 
-  return { init, switchPage, switchWorkoutSegment, switchProfileSegment, refreshDashboard };
+  return { init, switchPage, switchWorkoutSegment, refreshDashboard };
 })();
 
 document.addEventListener('DOMContentLoaded', App.init);

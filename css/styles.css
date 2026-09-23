@@ -225,8 +225,42 @@ body {
 .segmented-scroll::-webkit-scrollbar { display: none; }
 .segmented-scroll .segmented-btn { flex-shrink: 0; }
 
-.workout-seg, .profile-seg, .info-mode { display: none; }
-.workout-seg.active, .profile-seg.active, .info-mode.active { display: block; }
+.workout-seg, .info-mode, .profile-detail-panel { display: none; }
+.workout-seg.active, .info-mode.active, .profile-detail-panel.active { display: block; }
+
+/* Perfil: título sobre la gráfica + cuadrícula de accesos */
+.chart-headline { font-size: 1.4rem; font-weight: 800; margin-bottom: 10px; }
+.chart-headline .hint { font-size: 0.85rem; font-weight: 600; margin-left: 4px; }
+
+.profile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.profile-grid-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 14px;
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+}
+.profile-grid-card:hover { border-color: var(--accent); }
+
+/* Desglose de series por grupo muscular */
+.muscle-bars { display: flex; flex-direction: column; gap: 10px; }
+.muscle-bar-row { display: grid; grid-template-columns: 90px 1fr 30px; align-items: center; gap: 10px; }
+.muscle-bar-label { font-size: 0.82rem; color: var(--text-dim); }
+.muscle-bar-track { height: 8px; background: var(--bg-card); border-radius: 999px; overflow: hidden; }
+.muscle-bar-fill { height: 100%; background: var(--accent); border-radius: 999px; }
+.muscle-bar-value { font-size: 0.82rem; font-weight: 700; text-align: right; }
 
 /* Calendario de entrenamientos */
 .calendar-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }

@@ -23,6 +23,7 @@ const ICON_PATHS = {
   user: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
   chevronRight: '<polyline points="9 18 15 12 9 6"/>',
   ruler: '<path d="M3 8h18v8H3z"/><path d="M7 8v3"/><path d="M11 8v3"/><path d="M15 8v3"/><path d="M19 8v3"/>',
+  calendar: '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
 };
 
 function icon(name, size) {

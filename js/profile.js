@@ -1,5 +1,5 @@
-/* Lógica y render de la pestaña "Perfil": Información (gráfica general + por ejercicio),
- * Estadísticas, Medidas corporales y Calendario de entrenamientos. */
+/* Lógica y render de la pestaña "Perfil": gráfica semanal general / por ejercicio,
+ * y accesos a Estadísticas, Ejercicios, Medidas corporales y Calendario. */
 
 const Profile = (() => {
   let currentMetric = 'duration';
@@ -15,7 +15,29 @@ const Profile = (() => {
     return d.toISOString().slice(0, 10);
   }
 
-  // ---------------- Información: modo General / Por ejercicio ----------------
+  // ---------------- Navegación principal / subpáginas de detalle ----------------
+
+  function showMain() {
+    document.getElementById('profile-main').style.display = 'block';
+    document.getElementById('profile-detail').style.display = 'none';
+    const modeBtn = document.querySelector('#info-mode-segmented .segmented-btn.active');
+    const mode = modeBtn ? modeBtn.dataset.mode : 'general';
+    if (mode === 'general') drawGeneralChart();
+  }
+
+  function showDetail(type) {
+    document.getElementById('profile-main').style.display = 'none';
+    document.getElementById('profile-detail').style.display = 'block';
+    document.querySelectorAll('.profile-detail-panel').forEach(p => p.classList.toggle('active', p.id === `detail-${type}`));
+    const titles = { stats: 'Estadísticas', measurements: 'Medidas', calendar: 'Calendario' };
+    document.getElementById('profile-detail-title').textContent = titles[type] || '';
+    if (type === 'stats') renderStats();
+    if (type === 'measurements') renderMeasurements();
+    if (type === 'calendar') renderCalendar();
+    window.scrollTo(0, 0);
+  }
+
+  // ---------------- Información: modo General (gráfica semanal) / Por ejercicio ----------------
 
   function switchInfoMode(mode) {
     document.querySelectorAll('#info-mode-segmented .segmented-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
@@ -24,60 +46,84 @@ const Profile = (() => {
     if (mode === 'general') drawGeneralChart();
   }
 
-  function getGeneralPoints() {
-    const workouts = Storage.getWorkouts().slice().sort((a, b) => a.date.localeCompare(b.date));
-    return workouts.map(w => ({
-      date: w.date,
-      duration: w.durationMin || 0,
-      volume: Workouts.sessionVolume(w),
-      reps: Workouts.sessionReps(w),
-    }));
+  function getWeekStart(dateStr) {
+    const d = new Date(dateStr + 'T00:00:00');
+    const day = (d.getDay() + 6) % 7; // lunes = 0
+    d.setDate(d.getDate() - day);
+    return isoDate(d);
+  }
+
+  function getWeeklyPoints() {
+    const workouts = Storage.getWorkouts();
+    const map = {};
+    workouts.forEach(w => {
+      const key = getWeekStart(w.date);
+      if (!map[key]) map[key] = { duration: 0, volume: 0, reps: 0 };
+      map[key].duration += w.durationMin || 0;
+      map[key].volume += Workouts.sessionVolume(w);
+      map[key].reps += Workouts.sessionReps(w);
+    });
+    return Object.keys(map).sort().map(k => ({ week: k, ...map[k] }));
+  }
+
+  function metricText(metric, value) {
+    const rounded = Math.round(value);
+    if (metric === 'duration') return `${rounded} min`;
+    if (metric === 'volume') return `${rounded.toLocaleString('es-ES')} kg`;
+    return `${rounded} reps`;
   }
 
   function drawGeneralChart() {
-    const points = getGeneralPoints();
+    const points = getWeeklyPoints();
     const wrap = document.getElementById('general-chart-wrap');
     const empty = document.getElementById('general-chart-empty');
+    const headline = document.getElementById('chart-headline');
+
     if (points.length === 0) {
       wrap.style.display = 'none';
       empty.style.display = 'block';
+      headline.textContent = '';
       return;
     }
     wrap.style.display = 'block';
     empty.style.display = 'none';
 
-    const metricMeta = {
-      duration: { label: 'Duración (min)', color: cssVar('--accent') },
-      volume: { label: 'Volumen (kg)', color: cssVar('--accent-2') },
-      reps: { label: 'Repeticiones', color: cssVar('--gold') },
-    };
-    const meta = metricMeta[currentMetric];
+    const thisWeekKey = getWeekStart(isoDate(new Date()));
+    const thisWeekPoint = points.find(p => p.week === thisWeekKey);
+    const thisWeekValue = thisWeekPoint ? thisWeekPoint[currentMetric] : 0;
+    headline.innerHTML = `${metricText(currentMetric, thisWeekValue)} <span class="hint">esta semana</span>`;
+
+    const metricColor = {
+      duration: cssVar('--accent'),
+      volume: cssVar('--accent-2'),
+      reps: cssVar('--gold'),
+    }[currentMetric];
     const textDim = cssVar('--text-dim');
     const border = cssVar('--border');
+
+    const labels = points.map(p => new Date(p.week + 'T00:00:00').toLocaleDateString('es-ES', { day: 'numeric', month: 'short' }));
 
     const ctx = document.getElementById('general-chart').getContext('2d');
     if (generalChart) generalChart.destroy();
     generalChart = new Chart(ctx, {
-      type: 'line',
+      type: 'bar',
       data: {
-        labels: points.map(p => p.date),
+        labels,
         datasets: [{
-          label: meta.label,
           data: points.map(p => p[currentMetric]),
-          borderColor: meta.color,
-          backgroundColor: meta.color + '33',
-          tension: 0.25,
-          fill: true,
+          backgroundColor: metricColor,
+          borderRadius: 4,
+          maxBarThickness: 28,
         }],
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
         scales: {
-          x: { ticks: { color: textDim }, grid: { color: border } },
+          x: { ticks: { color: textDim }, grid: { display: false } },
           y: { ticks: { color: textDim }, grid: { color: border }, beginAtZero: true },
         },
-        plugins: { legend: { labels: { color: textDim } } },
+        plugins: { legend: { display: false } },
       },
     });
   }
@@ -124,9 +170,9 @@ const Profile = (() => {
       const group = ex ? ex.group : 'Otro';
       groupCount[group] = (groupCount[group] || 0) + e.sets.length;
     }));
-    let topGroup = '—';
-    let topCount = 0;
-    Object.entries(groupCount).forEach(([g, c]) => { if (c > topCount) { topCount = c; topGroup = g; } });
+    const groupEntries = Object.entries(groupCount).sort((a, b) => b[1] - a[1]);
+    const topGroup = groupEntries.length ? groupEntries[0][0] : '—';
+    const maxGroupCount = groupEntries.length ? groupEntries[0][1] : 0;
 
     document.getElementById('stats-grid').innerHTML = `
       <div class="stat-box"><span class="stat-label">Sesiones totales</span><span class="stat-value">${totalSessions}</span></div>
@@ -138,6 +184,21 @@ const Profile = (() => {
       <div class="stat-box"><span class="stat-label">Duración media</span><span class="stat-value">${avgDuration ? Workouts.formatDuration(avgDuration) : '—'}</span></div>
       <div class="stat-box"><span class="stat-label">Grupo más entrenado</span><span class="stat-value">${topGroup}</span></div>
     `;
+
+    const breakdownEl = document.getElementById('muscle-breakdown');
+    breakdownEl.style.display = groupEntries.length ? 'block' : 'none';
+    breakdownEl.innerHTML = groupEntries.length ? `
+      <h3>Series por grupo muscular</h3>
+      <div class="muscle-bars">
+        ${groupEntries.map(([group, count]) => `
+          <div class="muscle-bar-row">
+            <span class="muscle-bar-label">${group}</span>
+            <div class="muscle-bar-track"><div class="muscle-bar-fill" style="width:${Math.round((count / maxGroupCount) * 100)}%"></div></div>
+            <span class="muscle-bar-value">${count}</span>
+          </div>
+        `).join('')}
+      </div>
+    ` : '';
   }
 
   // ---------------- Medidas ----------------
@@ -287,17 +348,20 @@ const Profile = (() => {
     renderCalendar();
   }
 
-  // ---------------- Dispatch ----------------
+  // ---------------- Iconos de las tarjetas + tema ----------------
 
-  function onEnterSegment(seg) {
-    if (seg === 'info') {
-      const modeBtn = document.querySelector('#info-mode-segmented .segmented-btn.active');
-      const mode = modeBtn ? modeBtn.dataset.mode : 'general';
-      if (mode === 'general') drawGeneralChart();
-    }
-    if (seg === 'stats') renderStats();
-    if (seg === 'measurements') renderMeasurements();
-    if (seg === 'calendar') renderCalendar();
+  function renderGridIcons() {
+    const map = {
+      stats: ['trending', 'Estadísticas'],
+      measurements: ['ruler', 'Medidas'],
+      calendar: ['calendar', 'Calendario'],
+    };
+    document.querySelectorAll('.profile-grid-card[data-detail]').forEach(btn => {
+      const item = map[btn.dataset.detail];
+      if (item) btn.innerHTML = `${icon(item[0], 20)}<span>${item[1]}</span>`;
+    });
+    const exBtn = document.getElementById('profile-exercises-shortcut');
+    if (exBtn) exBtn.innerHTML = `${icon('dumbbell', 20)}<span>Ejercicios</span>`;
   }
 
   function rerenderChartsTheme() {
@@ -307,6 +371,7 @@ const Profile = (() => {
   }
 
   function init() {
+    renderGridIcons();
     document.getElementById('measure-date').value = isoDate(new Date());
 
     document.querySelectorAll('#info-mode-segmented .segmented-btn').forEach(btn => {
@@ -319,6 +384,15 @@ const Profile = (() => {
         drawGeneralChart();
       });
     });
+    document.querySelectorAll('.profile-grid-card[data-detail]').forEach(btn => {
+      btn.addEventListener('click', () => showDetail(btn.dataset.detail));
+    });
+    document.getElementById('profile-exercises-shortcut').addEventListener('click', () => {
+      App.switchPage('workout');
+      App.switchWorkoutSegment('exercises');
+    });
+    document.getElementById('profile-detail-back-btn').addEventListener('click', showMain);
+
     document.getElementById('toggle-more-measures-btn').addEventListener('click', () => {
       const el = document.getElementById('more-measures');
       el.style.display = el.style.display === 'none' ? 'grid' : 'none';
@@ -328,5 +402,5 @@ const Profile = (() => {
     document.getElementById('calendar-next-btn').addEventListener('click', () => changeMonth(1));
   }
 
-  return { init, onEnterSegment, rerenderChartsTheme, deleteMeasurement };
+  return { init, showMain, rerenderChartsTheme, deleteMeasurement };
 })();

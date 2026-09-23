@@ -19,7 +19,7 @@
   } catch (e) {}
 })();
 </script>
-<link rel="stylesheet" href="css/styles.css?v=12">
+<link rel="stylesheet" href="css/styles.css?v=13">
 </head>
 <body>
 
@@ -171,18 +171,11 @@
         </div>
       </section>
 
-      <!-- PERFIL: Información | Estadísticas | Medidas | Calendario -->
+      <!-- PERFIL: gráfica general/por ejercicio + accesos a Estadísticas/Ejercicios/Medidas/Calendario -->
       <section id="page-profile" class="page">
-        <h1 class="page-title">Perfil</h1>
-        <div class="segmented segmented-scroll" id="profile-segmented">
-          <button class="segmented-btn active" data-seg="info">Información</button>
-          <button class="segmented-btn" data-seg="stats">Estadísticas</button>
-          <button class="segmented-btn" data-seg="measurements">Medidas</button>
-          <button class="segmented-btn" data-seg="calendar">Calendario</button>
-        </div>
 
-        <!-- Información -->
-        <div id="profile-seg-info" class="profile-seg active">
+        <div id="profile-main">
+          <h1 class="page-title">Perfil</h1>
           <div class="segmented" id="info-mode-segmented">
             <button class="segmented-btn active" data-mode="general">General</button>
             <button class="segmented-btn" data-mode="exercise">Por ejercicio</button>
@@ -190,13 +183,22 @@
 
           <div id="info-mode-general" class="info-mode active">
             <div class="panel">
+              <div id="chart-headline" class="chart-headline"></div>
+              <div id="general-chart-empty" class="hint empty-hint">Registra alguna sesión para ver tu evolución.</div>
+              <div class="chart-wrap" id="general-chart-wrap" style="display:none;"><canvas id="general-chart"></canvas></div>
               <div class="segmented" id="metric-segmented">
                 <button class="segmented-btn active" data-metric="duration">Duración</button>
                 <button class="segmented-btn" data-metric="volume">Volumen</button>
                 <button class="segmented-btn" data-metric="reps">Repeticiones</button>
               </div>
-              <div id="general-chart-empty" class="hint empty-hint">Registra alguna sesión para ver tu evolución.</div>
-              <div class="chart-wrap" id="general-chart-wrap" style="display:none;"><canvas id="general-chart"></canvas></div>
+            </div>
+
+            <h3>Información</h3>
+            <div class="profile-grid">
+              <button class="profile-grid-card" data-detail="stats"></button>
+              <button class="profile-grid-card" id="profile-exercises-shortcut"></button>
+              <button class="profile-grid-card" data-detail="measurements"></button>
+              <button class="profile-grid-card" data-detail="calendar"></button>
             </div>
           </div>
 
@@ -212,53 +214,60 @@
           </div>
         </div>
 
-        <!-- Estadísticas -->
-        <div id="profile-seg-stats" class="profile-seg">
-          <div class="stats-row" id="stats-grid"></div>
-        </div>
-
-        <!-- Medidas -->
-        <div id="profile-seg-measurements" class="profile-seg">
-          <div class="panel">
-            <h2>Añadir medida</h2>
-            <div class="form-row-pair">
-              <div class="form-row">
-                <label>Fecha</label>
-                <input type="date" id="measure-date">
-              </div>
-              <div class="form-row">
-                <label>Peso (kg)</label>
-                <input type="number" step="0.1" min="0" id="measure-weight" placeholder="kg">
-              </div>
-            </div>
-            <button class="btn small ghost" id="toggle-more-measures-btn">+ Más medidas</button>
-            <div class="form-grid" id="more-measures" style="display:none;">
-              <input type="number" step="0.1" min="0" id="measure-waist" placeholder="Cintura (cm)">
-              <input type="number" step="0.1" min="0" id="measure-chest" placeholder="Pecho (cm)">
-              <input type="number" step="0.1" min="0" id="measure-arm" placeholder="Brazo (cm)">
-              <input type="number" step="0.1" min="0" id="measure-hip" placeholder="Cadera (cm)">
-            </div>
-            <button class="btn primary" id="save-measurement-btn">Guardar</button>
-            <span id="measurement-msg" class="msg"></span>
+        <!-- Subpágina de detalle (Estadísticas / Medidas / Calendario) -->
+        <div id="profile-detail" style="display:none;">
+          <div class="routine-editor-header">
+            <button class="btn small ghost" id="profile-detail-back-btn">Volver</button>
+            <h2 id="profile-detail-title"></h2>
+            <span></span>
           </div>
-          <div class="panel" id="measurement-chart-panel" style="display:none;">
-            <h2>Peso a lo largo del tiempo</h2>
-            <div class="chart-wrap"><canvas id="measurement-chart"></canvas></div>
-          </div>
-          <div id="measurements-list" class="session-list"></div>
-        </div>
 
-        <!-- Calendario -->
-        <div id="profile-seg-calendar" class="profile-seg">
-          <div class="panel">
-            <div class="calendar-header">
-              <button class="icon-btn" id="calendar-prev-btn"></button>
-              <strong id="calendar-label"></strong>
-              <button class="icon-btn" id="calendar-next-btn"></button>
+          <div id="detail-stats" class="profile-detail-panel">
+            <div class="stats-row" id="stats-grid"></div>
+            <div class="panel" id="muscle-breakdown"></div>
+          </div>
+
+          <div id="detail-measurements" class="profile-detail-panel">
+            <div class="panel">
+              <h2>Añadir medida</h2>
+              <div class="form-row-pair">
+                <div class="form-row">
+                  <label>Fecha</label>
+                  <input type="date" id="measure-date">
+                </div>
+                <div class="form-row">
+                  <label>Peso (kg)</label>
+                  <input type="number" step="0.1" min="0" id="measure-weight" placeholder="kg">
+                </div>
+              </div>
+              <button class="btn small ghost" id="toggle-more-measures-btn">+ Más medidas</button>
+              <div class="form-grid" id="more-measures" style="display:none;">
+                <input type="number" step="0.1" min="0" id="measure-waist" placeholder="Cintura (cm)">
+                <input type="number" step="0.1" min="0" id="measure-chest" placeholder="Pecho (cm)">
+                <input type="number" step="0.1" min="0" id="measure-arm" placeholder="Brazo (cm)">
+                <input type="number" step="0.1" min="0" id="measure-hip" placeholder="Cadera (cm)">
+              </div>
+              <button class="btn primary" id="save-measurement-btn">Guardar</button>
+              <span id="measurement-msg" class="msg"></span>
             </div>
-            <div class="calendar-weekdays"><span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span></div>
-            <div class="calendar-grid" id="calendar-grid"></div>
-            <div id="calendar-day-detail" class="hint calendar-day-detail"></div>
+            <div class="panel" id="measurement-chart-panel" style="display:none;">
+              <h2>Peso a lo largo del tiempo</h2>
+              <div class="chart-wrap"><canvas id="measurement-chart"></canvas></div>
+            </div>
+            <div id="measurements-list" class="session-list"></div>
+          </div>
+
+          <div id="detail-calendar" class="profile-detail-panel">
+            <div class="panel">
+              <div class="calendar-header">
+                <button class="icon-btn" id="calendar-prev-btn"></button>
+                <strong id="calendar-label"></strong>
+                <button class="icon-btn" id="calendar-next-btn"></button>
+              </div>
+              <div class="calendar-weekdays"><span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span></div>
+              <div class="calendar-grid" id="calendar-grid"></div>
+              <div id="calendar-day-detail" class="hint calendar-day-detail"></div>
+            </div>
           </div>
         </div>
       </section>
@@ -294,13 +303,13 @@
 </div>
 
 <script src="js/vendor/chart.umd.js"></script>
-<script src="js/icons.js?v=12"></script>
-<script src="js/storage.js?v=12"></script>
-<script src="js/seed-exercises.js?v=12"></script>
-<script src="js/exercise-picker.js?v=12"></script>
-<script src="js/workouts.js?v=12"></script>
-<script src="js/routines.js?v=12"></script>
-<script src="js/profile.js?v=12"></script>
-<script src="js/app.js?v=12"></script>
+<script src="js/icons.js?v=13"></script>
+<script src="js/storage.js?v=13"></script>
+<script src="js/seed-exercises.js?v=13"></script>
+<script src="js/exercise-picker.js?v=13"></script>
+<script src="js/workouts.js?v=13"></script>
+<script src="js/routines.js?v=13"></script>
+<script src="js/profile.js?v=13"></script>
+<script src="js/app.js?v=13"></script>
 </body>
 </html>

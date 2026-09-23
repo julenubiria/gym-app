@@ -1,6 +1,6 @@
 {
-  "name": "Mi Gym App",
-  "short_name": "GymApp",
+  "name": "Julen Gym App",
+  "short_name": "Julen Gym",
   "id": "/gym-app/",
   "start_url": "./index.html",
   "scope": "./",

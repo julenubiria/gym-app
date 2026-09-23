@@ -1,4 +1,4 @@
-# Mi Gym App
+# Julen Gym App
 
 App personal de entrenamiento (100% local, sin cuentas ni servidor), inspirada en Hevy/Strong:
 

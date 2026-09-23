@@ -3,14 +3,14 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-<title>Mi Gym App</title>
+<title>Julen Gym App</title>
 <meta name="theme-color" content="#0d0e12">
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="GymApp">
+<meta name="apple-mobile-web-app-title" content="Julen Gym">
 <script>
 (function () {
   try {
@@ -19,7 +19,7 @@
   } catch (e) {}
 })();
 </script>
-<link rel="stylesheet" href="css/styles.css?v=9">
+<link rel="stylesheet" href="css/styles.css?v=10">
 </head>
 <body>
 
@@ -27,7 +27,7 @@
 
   <!-- SIDEBAR (escritorio) -->
   <aside class="sidebar">
-    <div class="sidebar-brand"><span class="brand-mark">🏋️</span> Mi Gym App</div>
+    <div class="sidebar-brand"><span class="brand-mark">🏋️</span> Julen Gym App</div>
     <nav class="sidebar-nav" id="sidebar-nav">
       <button class="nav-item active" data-page="dashboard"></button>
       <button class="nav-item" data-page="routines"></button>
@@ -45,7 +45,7 @@
 
     <!-- TOPBAR (móvil) -->
     <header class="topbar-mobile">
-      <div class="brand"><span class="brand-mark">🏋️</span> Mi Gym App</div>
+      <div class="brand"><span class="brand-mark">🏋️</span> Julen Gym App</div>
       <div class="topbar-actions">
         <button class="icon-only-btn" data-page="settings" title="Ajustes" aria-label="Ajustes"></button>
         <button class="theme-toggle" id="theme-toggle-btn-mobile" title="Cambiar tema" aria-label="Cambiar tema"></button>
@@ -144,7 +144,16 @@
                 <div class="stats-row" id="routine-summary-stats"></div>
               </div>
               <div class="panel routine-library">
-                <h3>Biblioteca</h3>
+                <div class="panel-header-row">
+                  <h3>Biblioteca</h3>
+                  <button class="btn small ghost" id="toggle-new-exercise-routine-btn">+ Ejercicio nuevo</button>
+                </div>
+                <div class="form-grid" id="inline-new-exercise-routine" style="display:none;">
+                  <input type="text" id="inline-ex-routine-name" placeholder="Nombre del ejercicio">
+                  <select id="inline-ex-routine-group"></select>
+                  <select id="inline-ex-routine-equipment"></select>
+                  <button class="btn small primary" id="inline-ex-routine-save-btn">Crear y añadir</button>
+                </div>
                 <div id="routine-exercise-picker"></div>
               </div>
             </div>
@@ -228,12 +237,12 @@
 </div>
 
 <script src="js/vendor/chart.umd.js"></script>
-<script src="js/icons.js?v=9"></script>
-<script src="js/storage.js?v=9"></script>
-<script src="js/seed-exercises.js?v=9"></script>
-<script src="js/exercise-picker.js?v=9"></script>
-<script src="js/workouts.js?v=9"></script>
-<script src="js/routines.js?v=9"></script>
-<script src="js/app.js?v=9"></script>
+<script src="js/icons.js?v=10"></script>
+<script src="js/storage.js?v=10"></script>
+<script src="js/seed-exercises.js?v=10"></script>
+<script src="js/exercise-picker.js?v=10"></script>
+<script src="js/workouts.js?v=10"></script>
+<script src="js/routines.js?v=10"></script>
+<script src="js/app.js?v=10"></script>
 </body>
 </html>

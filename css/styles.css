@@ -236,7 +236,7 @@ h3 { font-size: 0.85rem; color: var(--text-dim); text-transform: uppercase; lett
   justify-content: space-between;
   margin-bottom: 10px;
 }
-.panel-header-row h2 { margin: 0; }
+.panel-header-row h2, .panel-header-row h3 { margin: 0; }
 
 .grid.cards {
   display: grid;

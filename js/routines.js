@@ -159,11 +159,25 @@ const Routines = (() => {
       placeholder: 'Buscar en la biblioteca...',
       excludeIds: () => editorExercises.map(e => e.exerciseId),
       onSelect: (ex) => addExercise(ex.id),
-      onCreate: (name) => {
-        const ex = Storage.addExercise(name, 'Otro', 'Otro');
-        addExercise(ex.id);
-      },
+      onCreate: (name) => openInlineNewExercise(name),
     });
+  }
+
+  function openInlineNewExercise(prefillName) {
+    document.getElementById('inline-ex-routine-name').value = prefillName || '';
+    document.getElementById('inline-new-exercise-routine').style.display = 'grid';
+    document.getElementById('inline-ex-routine-name').focus();
+  }
+
+  function saveInlineNewExercise() {
+    const name = document.getElementById('inline-ex-routine-name').value.trim();
+    if (!name) return;
+    const group = document.getElementById('inline-ex-routine-group').value;
+    const equipment = document.getElementById('inline-ex-routine-equipment').value;
+    const ex = Storage.addExercise(name, group, equipment);
+    document.getElementById('inline-ex-routine-name').value = '';
+    document.getElementById('inline-new-exercise-routine').style.display = 'none';
+    addExercise(ex.id);
   }
 
   function refreshPicker() {
@@ -338,6 +352,13 @@ const Routines = (() => {
     document.getElementById('save-routine-btn').addEventListener('click', save);
     document.getElementById('routine-editor-back-btn').addEventListener('click', closeEditor);
     document.getElementById('routine-folder-select').addEventListener('change', (e) => { editorFolderId = e.target.value || null; });
+    document.getElementById('toggle-new-exercise-routine-btn').addEventListener('click', () => openInlineNewExercise(''));
+    document.getElementById('inline-ex-routine-save-btn').addEventListener('click', saveInlineNewExercise);
+
+    const groupSel = document.getElementById('inline-ex-routine-group');
+    const equipSel = document.getElementById('inline-ex-routine-equipment');
+    groupSel.innerHTML = MUSCLE_GROUPS.map(g => `<option value="${g}">${g}</option>`).join('');
+    equipSel.innerHTML = EQUIPMENT_TYPES.map(e => `<option value="${e}">${e}</option>`).join('');
   }
 
   function init() {

@@ -183,9 +183,25 @@ const App = (() => {
   }
 
   function registerServiceWorker() {
-    if ('serviceWorker' in navigator && (location.protocol === 'http:' || location.protocol === 'https:')) {
-      navigator.serviceWorker.register('sw.js').catch(() => {});
-    }
+    if (!('serviceWorker' in navigator) || (location.protocol !== 'http:' && location.protocol !== 'https:')) return;
+
+    // Si una versión nueva del Service Worker toma el control MIENTRAS la app ya
+    // estaba abierta, recarga sola para que se vea la última versión sin tener que
+    // borrar caché a mano. La primera vez que se instala (sin controller previo) no recarga.
+    const hadController = !!navigator.serviceWorker.controller;
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!hadController || reloaded) return;
+      reloaded = true;
+      location.reload();
+    });
+
+    navigator.serviceWorker.register('sw.js').then((reg) => {
+      // Comprueba si hay una versión nueva cada vez que se abre/reactiva la app.
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') reg.update().catch(() => {});
+      });
+    }).catch(() => {});
   }
 
   return { init, switchTab, switchWorkoutsSubtab, refreshDashboard };

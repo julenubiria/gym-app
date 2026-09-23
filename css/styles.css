@@ -429,6 +429,45 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
 
 .chart-wrap { height: 300px; margin-top: 12px; }
 
+/* ---- Registrar: empezar rápido desde una rutina ---- */
+.quick-start-routines { display: flex; flex-direction: column; gap: 8px; }
+.routine-quick-btn {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  cursor: pointer;
+  text-align: left;
+  width: 100%;
+  color: var(--text);
+}
+.routine-quick-btn:hover { border-color: var(--accent); }
+.routine-quick-btn-icon { font-size: 1.1rem; }
+.routine-quick-btn strong { display: block; font-size: 0.92rem; }
+
+/* ---- Rutinas: editor simplificado (sin peso/reps) ---- */
+.routine-mini-row { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 4px; }
+.routine-mini-row label { display: flex; flex-direction: column; gap: 6px; font-size: 0.8rem; color: var(--text-dim); font-weight: 600; }
+.routine-mini-row select { width: auto; }
+.stepper { display: flex; align-items: center; gap: 10px; }
+.stepper .icon-btn {
+  background: var(--bg-card-2);
+  border: 1px solid var(--border);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text);
+  font-size: 1rem;
+  line-height: 1;
+}
+.stepper span { min-width: 18px; text-align: center; font-weight: 700; color: var(--text); }
+
 /* ---- Rutinas: lista con carpetas ---- */
 .routines-toolbar { display: flex; gap: 8px; margin-bottom: 14px; }
 

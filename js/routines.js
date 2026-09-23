@@ -1,4 +1,6 @@
-/* Lógica y render de la subpestaña "Rutinas": lista con carpetas + editor estilo Hevy */
+/* Lógica y render de la subpestaña "Rutinas": lista con carpetas + editor estilo Hevy.
+ * Las rutinas solo guardan qué ejercicios y cuántas series planeadas, no peso ni reps:
+ * eso se rellena durante la sesión real. */
 
 const REST_OPTIONS = [
   { value: 0, label: 'Desactivado' },
@@ -13,7 +15,7 @@ const REST_OPTIONS = [
 
 const Routines = (() => {
   let editingId = null;
-  let editorExercises = []; // [{exerciseId, note, restSeconds, sets: [{weight, repMin, repMax}]}]
+  let editorExercises = []; // [{exerciseId, note, restSeconds, targetSets}]
   let editorFolderId = null;
   let picker = null;
   const collapsedFolders = new Set();
@@ -78,12 +80,11 @@ const Routines = (() => {
       const ex = exercises.find(x => x.id === re.exerciseId);
       return ex ? ex.name : '?';
     }).join(', ');
-    const totalSets = r.exercises.reduce((s, re) => s + re.sets.length, 0);
+    const totalSets = r.exercises.reduce((s, re) => s + (re.targetSets || 0), 0);
     return `
       <div class="panel routine-card">
         <div class="routine-card-top">
           <div class="routine-avatars">${avatars}</div>
-          <button class="icon-btn" data-routine-menu="${r.id}">⋯</button>
         </div>
         <strong class="session-name">${escapeHtml(r.name)}</strong>
         <div class="hint routine-card-names">${escapeHtml(names)}</div>
@@ -182,7 +183,7 @@ const Routines = (() => {
       const routine = Storage.getRoutines().find(r => r.id === routineId);
       if (!routine) return;
       editingId = routineId;
-      editorExercises = routine.exercises.map(e => ({ ...e, sets: e.sets.map(s => ({ ...s })) }));
+      editorExercises = routine.exercises.map(e => ({ ...e }));
       editorFolderId = routine.folderId || null;
       document.getElementById('routine-name').value = routine.name;
       document.getElementById('routine-editor-title').textContent = 'Editar rutina';
@@ -216,7 +217,7 @@ const Routines = (() => {
   }
 
   function renderSummary() {
-    const totalSets = editorExercises.reduce((s, e) => s + e.sets.length, 0);
+    const totalSets = editorExercises.reduce((s, e) => s + (e.targetSets || 0), 0);
     document.getElementById('routine-summary-stats').innerHTML = `
       <div class="stat-box"><span class="stat-label">Ejercicios</span><span class="stat-value">${editorExercises.length}</span></div>
       <div class="stat-box"><span class="stat-label">Series totales</span><span class="stat-value">${totalSets}</span></div>
@@ -227,27 +228,12 @@ const Routines = (() => {
     const container = document.getElementById('routine-editor-exercises');
     renderSummary();
     if (editorExercises.length === 0) {
-      container.innerHTML = '<p class="hint empty-hint">Añade ejercicios desde la Biblioteca de la derecha.</p>';
+      container.innerHTML = '<p class="hint empty-hint">Añade ejercicios desde la Biblioteca de la derecha. El peso y las reps los pones tú durante la sesión.</p>';
       return;
     }
     const exercises = Storage.getExercises();
     container.innerHTML = editorExercises.map((re, idx) => {
       const ex = exercises.find(x => x.id === re.exerciseId);
-      const setsHtml = re.sets.map((s, si) => `
-        <div class="routine-set-row">
-          <span class="set-num">${si + 1}</span>
-          <input type="number" step="0.5" min="0" placeholder="kg" value="${s.weight ?? ''}"
-            onchange="Routines.updateSetField(${idx}, ${si}, 'weight', this.value)">
-          <div class="rep-range-inputs">
-            <input type="number" min="0" placeholder="min" value="${s.repMin ?? ''}"
-              onchange="Routines.updateSetField(${idx}, ${si}, 'repMin', this.value)">
-            <span>–</span>
-            <input type="number" min="0" placeholder="max" value="${s.repMax ?? ''}"
-              onchange="Routines.updateSetField(${idx}, ${si}, 'repMax', this.value)">
-          </div>
-          <button class="icon-btn" onclick="Routines.removeSet(${idx}, ${si})">✕</button>
-        </div>
-      `).join('');
       return `
         <div class="panel exercise-card">
           <div class="exercise-card-header">
@@ -264,18 +250,18 @@ const Routines = (() => {
           <textarea class="routine-note-input" placeholder="Nota (ej: técnica, tempo...)" style="display:${re._showNote || re.note ? 'block' : 'none'}"
             onchange="Routines.updateNote(${idx}, this.value)">${escapeHtml(re.note || '')}</textarea>
 
-          <div class="form-row inline routine-rest-row">
-            <label>Descanso</label>
-            <select onchange="Routines.updateRest(${idx}, this.value)">
-              ${REST_OPTIONS.map(o => `<option value="${o.value}" ${Number(re.restSeconds) === o.value ? 'selected' : ''}>${o.label}</option>`).join('')}
-            </select>
+          <div class="routine-mini-row">
+            <label>Series <div class="stepper">
+              <button type="button" class="icon-btn" onclick="Routines.updateTargetSets(${idx}, -1)">−</button>
+              <span>${re.targetSets}</span>
+              <button type="button" class="icon-btn" onclick="Routines.updateTargetSets(${idx}, 1)">+</button>
+            </div></label>
+            <label>Descanso
+              <select onchange="Routines.updateRest(${idx}, this.value)">
+                ${REST_OPTIONS.map(o => `<option value="${o.value}" ${Number(re.restSeconds) === o.value ? 'selected' : ''}>${o.label}</option>`).join('')}
+              </select>
+            </label>
           </div>
-
-          <div class="routine-set-row routine-set-row-header">
-            <span>SET</span><span>KG</span><span>REPS</span><span></span>
-          </div>
-          ${setsHtml}
-          <button class="btn small ghost" onclick="Routines.addSet(${idx})">+ Agregar serie</button>
         </div>
       `;
     }).join('');
@@ -283,7 +269,7 @@ const Routines = (() => {
 
   function addExercise(exerciseId) {
     if (editorExercises.some(e => e.exerciseId === exerciseId)) return;
-    editorExercises.push({ exerciseId, note: '', restSeconds: 90, sets: [{ weight: '', repMin: 8, repMax: 10 }] });
+    editorExercises.push({ exerciseId, note: '', restSeconds: 90, targetSets: 3 });
     renderEditorExercises();
     refreshPicker();
   }
@@ -315,21 +301,10 @@ const Routines = (() => {
     editorExercises[idx].restSeconds = Number(value);
   }
 
-  function addSet(idx) {
-    const sets = editorExercises[idx].sets;
-    const last = sets.at(-1);
-    sets.push({ weight: last ? last.weight : '', repMin: last ? last.repMin : 8, repMax: last ? last.repMax : 10 });
+  function updateTargetSets(idx, delta) {
+    const next = (editorExercises[idx].targetSets || 1) + delta;
+    editorExercises[idx].targetSets = Math.max(1, Math.min(20, next));
     renderEditorExercises();
-  }
-
-  function removeSet(idx, setIdx) {
-    editorExercises[idx].sets.splice(setIdx, 1);
-    if (editorExercises[idx].sets.length === 0) editorExercises.splice(idx, 1);
-    renderEditorExercises();
-  }
-
-  function updateSetField(idx, setIdx, field, value) {
-    editorExercises[idx].sets[setIdx][field] = value === '' ? '' : Number(value);
   }
 
   function save() {
@@ -346,7 +321,7 @@ const Routines = (() => {
       return;
     }
     const cleanExercises = editorExercises.map(e => ({
-      exerciseId: e.exerciseId, note: e.note || '', restSeconds: e.restSeconds || 0, sets: e.sets,
+      exerciseId: e.exerciseId, note: e.note || '', restSeconds: e.restSeconds || 0, targetSets: e.targetSets || 1,
     }));
     if (editingId) {
       Storage.updateRoutine({ id: editingId, name, exercises: cleanExercises, folderId: editorFolderId });
@@ -372,8 +347,8 @@ const Routines = (() => {
 
   return {
     init, renderList: renderGroups, showBrowse, refreshPicker,
-    addExercise, removeExercise, moveExercise, toggleNote, updateNote, updateRest,
-    addSet, removeSet, updateSetField, start: startRoutine, edit: openEditor,
+    addExercise, removeExercise, moveExercise, toggleNote, updateNote, updateRest, updateTargetSets,
+    start: startRoutine, edit: openEditor,
     remove: (id) => { if (confirm('¿Eliminar esta rutina?')) { Storage.deleteRoutine(id); renderGroups(); } },
   };
 })();

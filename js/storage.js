@@ -65,26 +65,24 @@ const Storage = (() => {
   }
 
   // ---- Routines (rutinas / plantillas) ----
-  // Formato de cada ejercicio de una rutina: { exerciseId, note, restSeconds, sets: [{ weight, repMin, repMax }] }
-  // Las rutinas antiguas (targetSets/targetReps) se normalizan al leerlas.
+  // Formato de cada ejercicio de una rutina: { exerciseId, note, restSeconds, targetSets }.
+  // No se pide peso ni repeticiones al crear la rutina: eso se rellena durante la sesión.
+  // Los formatos antiguos (con sets/reps o targetReps) se normalizan al leerlos.
   function normalizeRoutineExercise(re) {
-    if (re && Array.isArray(re.sets)) {
+    if (!re) return { exerciseId: '', note: '', restSeconds: 0, targetSets: 3 };
+    if (Array.isArray(re.sets)) {
       return {
         exerciseId: re.exerciseId,
         note: re.note || '',
         restSeconds: re.restSeconds || 0,
-        sets: re.sets.map(s => ({ weight: s.weight ?? '', repMin: s.repMin ?? '', repMax: s.repMax ?? '' })),
+        targetSets: re.sets.length || 3,
       };
     }
-    const parts = String((re && re.targetReps) || '').split('-').map(s => s.trim()).filter(Boolean);
-    const repMin = parts[0] ? Number(parts[0]) : '';
-    const repMax = parts[1] ? Number(parts[1]) : repMin;
-    const count = (re && re.targetSets) || 1;
     return {
       exerciseId: re.exerciseId,
-      note: '',
-      restSeconds: 0,
-      sets: Array.from({ length: count }, () => ({ weight: '', repMin, repMax })),
+      note: re.note || '',
+      restSeconds: re.restSeconds || 0,
+      targetSets: re.targetSets || 3,
     };
   }
 

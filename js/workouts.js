@@ -57,10 +57,29 @@ const Workouts = (() => {
   }
 
   function renderStartFromRoutineSelect() {
-    const sel = document.getElementById('start-from-routine-select');
+    const panel = document.getElementById('quick-start-panel');
+    const container = document.getElementById('quick-start-routines');
     const routines = Storage.getRoutines();
-    sel.innerHTML = '<option value="">— Empezar desde una rutina —</option>' +
-      routines.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+    if (routines.length === 0) {
+      panel.style.display = 'none';
+      return;
+    }
+    panel.style.display = 'block';
+    container.innerHTML = routines.map(r => `
+      <button type="button" class="routine-quick-btn" data-routine-id="${r.id}">
+        <span class="routine-quick-btn-icon">▶️</span>
+        <span>
+          <strong>${escapeHtml(r.name)}</strong>
+          <span class="hint">${r.exercises.length} ejercicios</span>
+        </span>
+      </button>
+    `).join('');
+    container.querySelectorAll('[data-routine-id]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const routine = Storage.getRoutines().find(r => r.id === btn.dataset.routineId);
+        if (routine) startFromRoutine(routine);
+      });
+    });
   }
 
   // Devuelve los últimos sets realizados para un ejercicio (para pre-rellenar "peso previo")
@@ -76,11 +95,10 @@ const Workouts = (() => {
   function startFromRoutine(routine) {
     currentSessionExercises = routine.exercises.map(re => {
       const last = getLastPerformance(re.exerciseId);
-      const sets = re.sets.map((target, i) => {
+      const count = re.targetSets || 1;
+      const sets = Array.from({ length: count }, (_, i) => {
         const src = last ? (last[i] || last[last.length - 1]) : null;
-        const weight = target.weight !== '' && target.weight != null ? target.weight : (src ? src.weight : '');
-        const reps = src ? src.reps : (target.repMin !== '' && target.repMin != null ? target.repMin : '');
-        return { weight, reps, rpe: '' };
+        return { weight: src ? src.weight : '', reps: src ? src.reps : '', rpe: '' };
       });
       return { exerciseId: re.exerciseId, sets };
     });
@@ -484,12 +502,6 @@ const Workouts = (() => {
   function bindEvents() {
     document.getElementById('save-workout-btn').addEventListener('click', saveCurrentWorkout);
     document.getElementById('add-new-exercise-btn').addEventListener('click', addExerciseFromForm);
-    document.getElementById('start-from-routine-btn').addEventListener('click', () => {
-      const id = document.getElementById('start-from-routine-select').value;
-      if (!id) return;
-      const routine = Storage.getRoutines().find(r => r.id === id);
-      if (routine) startFromRoutine(routine);
-    });
     document.getElementById('inline-ex-save-btn').addEventListener('click', saveInlineNewExercise);
     document.getElementById('exercise-list-search').addEventListener('input', renderExerciseList);
     document.getElementById('exercise-list-group-filter').addEventListener('change', renderExerciseList);

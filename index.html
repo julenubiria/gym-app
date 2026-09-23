@@ -19,7 +19,7 @@
   } catch (e) {}
 })();
 </script>
-<link rel="stylesheet" href="css/styles.css?v=5">
+<link rel="stylesheet" href="css/styles.css?v=6">
 </head>
 <body>
 
@@ -66,6 +66,11 @@
     </div>
 
     <div id="workouts-log" class="subtab-panel active">
+      <div class="panel" id="quick-start-panel" style="display:none;">
+        <h2>Empezar desde una rutina</h2>
+        <div id="quick-start-routines" class="quick-start-routines"></div>
+      </div>
+
       <div class="panel">
         <div class="form-row-pair">
           <div class="form-row">
@@ -76,10 +81,6 @@
             <label>Nombre de la sesión</label>
             <input type="text" id="workout-name" placeholder="Ej: Empuje, Pierna, Full Body...">
           </div>
-        </div>
-        <div class="form-row inline" id="start-from-routine-row">
-          <select id="start-from-routine-select"><option value="">— Empezar desde una rutina —</option></select>
-          <button class="btn small" id="start-from-routine-btn">Cargar rutina</button>
         </div>
       </div>
 
@@ -198,11 +199,11 @@
 </main>
 
 <script src="js/vendor/chart.umd.js"></script>
-<script src="js/storage.js?v=5"></script>
-<script src="js/seed-exercises.js?v=5"></script>
-<script src="js/exercise-picker.js?v=5"></script>
-<script src="js/workouts.js?v=5"></script>
-<script src="js/routines.js?v=5"></script>
-<script src="js/app.js?v=5"></script>
+<script src="js/storage.js?v=6"></script>
+<script src="js/seed-exercises.js?v=6"></script>
+<script src="js/exercise-picker.js?v=6"></script>
+<script src="js/workouts.js?v=6"></script>
+<script src="js/routines.js?v=6"></script>
+<script src="js/app.js?v=6"></script>
 </body>
 </html>

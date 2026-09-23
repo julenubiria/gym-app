@@ -340,7 +340,7 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
 
 .set-row {
   display: grid;
-  grid-template-columns: 24px 1fr 1fr 1fr 26px;
+  grid-template-columns: 24px 1fr 1fr 26px;
   gap: 6px;
   align-items: center;
   margin-bottom: 6px;
@@ -517,21 +517,6 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
   font-family: inherit;
   font-size: 0.88rem;
 }
-.routine-rest-row { margin-bottom: 10px; }
-.routine-rest-row label { flex-shrink: 0; }
-
-.routine-set-row {
-  display: grid;
-  grid-template-columns: 24px 1fr 1.6fr 26px;
-  gap: 6px;
-  align-items: center;
-  margin-bottom: 6px;
-}
-.routine-set-row-header { color: var(--text-dim); font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em; }
-.rep-range-inputs { display: flex; align-items: center; gap: 4px; }
-.rep-range-inputs input { text-align: center; }
-.rep-range-inputs span { color: var(--text-dim); flex-shrink: 0; }
-
 /* ---- Biblioteca de ejercicios (modo library, panel lateral) ---- */
 .ex-picker-library .ex-picker-filters { display: flex; gap: 8px; margin-bottom: 8px; }
 .ex-picker-library .ex-picker-input { margin-bottom: 8px; }
@@ -564,8 +549,7 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
 @media (max-width: 640px) {
   .grid.cards { grid-template-columns: repeat(2, 1fr); }
   .form-row-pair { grid-template-columns: 1fr; }
-  .set-row { grid-template-columns: 22px 1fr 1fr 1fr 22px; }
-  .routine-set-row { grid-template-columns: 20px 1fr 1.6fr 22px; }
+  .set-row { grid-template-columns: 22px 1fr 1fr 22px; }
   .list-item { flex-direction: column; align-items: stretch; }
   .heatmap { grid-template-columns: repeat(14, 1fr); }
   .ex-picker-library .ex-picker-filters { flex-direction: column; }

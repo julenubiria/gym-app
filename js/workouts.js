@@ -4,7 +4,7 @@ const MUSCLE_GROUPS = ['Pecho', 'Espalda', 'Hombro', 'Bíceps', 'Tríceps', 'Pie
 const EQUIPMENT_TYPES = ['Barra', 'Mancuernas', 'Máquina', 'Polea', 'Peso corporal', 'Smith', 'Kettlebell', 'Banda elástica', 'Cardio', 'Otro'];
 
 const Workouts = (() => {
-  let currentSessionExercises = []; // [{exerciseId, sets: [{weight, reps, rpe}]}]
+  let currentSessionExercises = []; // [{exerciseId, sets: [{weight, reps}]}]
   let sessionStartAt = null;
   let logExercisePicker = null;
   let progressExerciseId = null;
@@ -98,7 +98,7 @@ const Workouts = (() => {
       const count = re.targetSets || 1;
       const sets = Array.from({ length: count }, (_, i) => {
         const src = last ? (last[i] || last[last.length - 1]) : null;
-        return { weight: src ? src.weight : '', reps: src ? src.reps : '', rpe: '' };
+        return { weight: src ? src.weight : '', reps: src ? src.reps : '' };
       });
       return { exerciseId: re.exerciseId, sets };
     });
@@ -124,8 +124,6 @@ const Workouts = (() => {
             onchange="Workouts.updateSet(${exIdx}, ${setIdx}, 'weight', this.value)">
           <input type="number" step="1" min="0" inputmode="numeric" placeholder="reps" value="${s.reps ?? ''}"
             onchange="Workouts.updateSet(${exIdx}, ${setIdx}, 'reps', this.value)">
-          <input type="number" step="0.5" min="0" max="10" inputmode="decimal" placeholder="RPE" value="${s.rpe ?? ''}"
-            onchange="Workouts.updateSet(${exIdx}, ${setIdx}, 'rpe', this.value)">
           <button class="icon-btn" onclick="Workouts.removeSet(${exIdx}, ${setIdx})">✕</button>
         </div>
       `).join('');
@@ -140,7 +138,7 @@ const Workouts = (() => {
             <button class="icon-btn" onclick="Workouts.removeExerciseFromSession(${exIdx})">✕</button>
           </div>
           <div class="set-row set-row-header">
-            <span>SET</span><span>kg</span><span>reps</span><span>RPE</span><span></span>
+            <span>SET</span><span>kg</span><span>reps</span><span></span>
           </div>
           ${setsHtml}
           <button class="btn small ghost" onclick="Workouts.addSet(${exIdx})">+ Añadir serie</button>
@@ -155,7 +153,7 @@ const Workouts = (() => {
     if (!sessionStartAt) sessionStartAt = Date.now();
     const last = getLastPerformance(exerciseId);
     const src = last ? last[0] : null;
-    currentSessionExercises.push({ exerciseId, sets: [{ weight: src ? src.weight : '', reps: src ? src.reps : '', rpe: '' }] });
+    currentSessionExercises.push({ exerciseId, sets: [{ weight: src ? src.weight : '', reps: src ? src.reps : '' }] });
     renderCurrentSession();
     if (logExercisePicker) logExercisePicker.refresh();
   }
@@ -165,7 +163,6 @@ const Workouts = (() => {
     currentSessionExercises[exIdx].sets.push({
       weight: prevSet ? prevSet.weight : '',
       reps: prevSet ? prevSet.reps : '',
-      rpe: '',
     });
     renderCurrentSession();
   }
@@ -255,7 +252,7 @@ const Workouts = (() => {
       const rows = e.sets.map((s, i) => `
         <div class="set-view-row">
           <span class="set-num">${i + 1}</span>
-          <span>${s.weight}kg × ${s.reps} rep${s.reps === 1 ? '' : 's'}${s.rpe ? ` · RPE ${s.rpe}` : ''}</span>
+          <span>${s.weight}kg × ${s.reps} rep${s.reps === 1 ? '' : 's'}</span>
           ${setMarks[i] ? '<span class="pr-badge" title="Nuevo récord">🏆</span>' : ''}
         </div>
       `).join('');

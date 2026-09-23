@@ -166,6 +166,26 @@ const App = (() => {
       Storage.resetAll();
       location.reload();
     });
+
+    initNotificationsSettings();
+  }
+
+  function initNotificationsSettings() {
+    const btn = document.getElementById('enable-notifications-btn');
+    const status = document.getElementById('notifications-status');
+    if (!btn || !status) return;
+    function refresh() {
+      if (!('Notification' in window)) {
+        status.textContent = 'Tu navegador no soporta notificaciones.';
+        btn.style.display = 'none';
+        return;
+      }
+      const labels = { granted: 'Activados ✓', denied: 'Bloqueados desde los ajustes del navegador.', default: 'Aún no activados.' };
+      status.textContent = labels[Notification.permission] || '';
+      btn.style.display = Notification.permission === 'default' ? 'inline-flex' : 'none';
+    }
+    btn.addEventListener('click', () => { Notification.requestPermission().then(refresh).catch(() => {}); });
+    refresh();
   }
 
   function initTheme() {
@@ -197,7 +217,7 @@ const App = (() => {
     initTheme();
     Workouts.init();
     Routines.init();
-    Workouts.showView('browse');
+    Workouts.showBrowseOrResume();
     Profile.init();
     initSettingsForm();
     refreshDashboard();

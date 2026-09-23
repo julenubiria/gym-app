@@ -9,6 +9,7 @@ const Storage = (() => {
     seeded: 'gymapp_seeded_v3',
     migratedBuiltin: 'gymapp_migrated_builtin_v1',
     measurements: 'gymapp_measurements',
+    draftSession: 'gymapp_draft_session',
   };
 
   function uid() {
@@ -185,6 +186,17 @@ const Storage = (() => {
     saveMeasurements(read(KEYS.measurements, []).filter(m => m.id !== id));
   }
 
+  // ---- Borrador de entrenamiento activo (para no perderlo si se cierra la app) ----
+  function getDraftSession() {
+    return read(KEYS.draftSession, null);
+  }
+  function saveDraftSession(draft) {
+    write(KEYS.draftSession, draft);
+  }
+  function clearDraftSession() {
+    localStorage.removeItem(KEYS.draftSession);
+  }
+
   // ---- Backup ----
   function exportAll() {
     return {
@@ -216,6 +228,7 @@ const Storage = (() => {
     getRoutines, addRoutine, updateRoutine, deleteRoutine,
     getFolders, addFolder, renameFolder, deleteFolder,
     getMeasurements, addMeasurement, deleteMeasurement,
+    getDraftSession, saveDraftSession, clearDraftSession,
     seedIfNeeded, exportAll, importAll, resetAll,
   };
 })();

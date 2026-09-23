@@ -10,6 +10,8 @@ const Workouts = (() => {
   let logExercisePicker = null;
   let progressExerciseId = null;
   let progressPicker = null;
+  let restState = null; // { exIdx, endAt }
+  let restInterval = null;
 
   function todayStr() {
     const d = new Date();
@@ -79,8 +81,20 @@ const Workouts = (() => {
   function resetSession() {
     currentSessionExercises = [];
     sessionStartAt = null;
+    clearRest();
     document.getElementById('workout-date').value = todayStr();
     document.getElementById('workout-name').value = '';
+    Storage.clearDraftSession();
+  }
+
+  function discardSession() {
+    if (currentSessionExercises.length > 0 || sessionStartAt) {
+      if (!confirm('¿Descartar este entrenamiento? Se perderá todo el progreso de esta sesión.')) return;
+    }
+    const kebab = document.querySelector('#active-session .kebab');
+    if (kebab) kebab.removeAttribute('open');
+    resetSession();
+    showView('browse');
   }
 
   function ensureSessionStarted() {
@@ -92,6 +106,132 @@ const Workouts = (() => {
     ensureSessionStarted();
     showView('session');
     if (logExercisePicker) logExercisePicker.refresh();
+  }
+
+  // ---------------- Borrador persistente (sobrevive a cerrar la app / bloquear el móvil) ----------------
+
+  function persistDraft() {
+    if (!sessionStartAt) { Storage.clearDraftSession(); return; }
+    Storage.saveDraftSession({
+      startedAt: sessionStartAt,
+      date: document.getElementById('workout-date').value,
+      name: document.getElementById('workout-name').value,
+      exercises: currentSessionExercises,
+      rest: restState,
+    });
+  }
+
+  function restoreDraftIfAny() {
+    const draft = Storage.getDraftSession();
+    if (!draft || !draft.startedAt) return;
+    currentSessionExercises = draft.exercises || [];
+    sessionStartAt = draft.startedAt;
+    document.getElementById('workout-date').value = draft.date || todayStr();
+    document.getElementById('workout-name').value = draft.name || '';
+    if (draft.rest && draft.rest.endAt > Date.now()) {
+      restState = draft.rest;
+      if (restInterval) clearInterval(restInterval);
+      restInterval = setInterval(tickRest, 250);
+    }
+  }
+
+  // ---------------- Descanso entre series: cuenta atrás + aviso (sonido/vibración/notificación) ----------------
+
+  function ensureNotificationPermission() {
+    if (!('Notification' in window)) return;
+    if (Notification.permission === 'default') {
+      Notification.requestPermission().catch(() => {});
+    }
+  }
+
+  function playBeep() {
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      const ctx = new Ctx();
+      [0, 0.2].forEach((delay) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = 880;
+        gain.gain.setValueAtTime(0.0001, ctx.currentTime + delay);
+        gain.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + delay + 0.01);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + delay + 0.18);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(ctx.currentTime + delay);
+        osc.stop(ctx.currentTime + delay + 0.2);
+      });
+      setTimeout(() => ctx.close(), 600);
+    } catch (e) { /* Web Audio no disponible */ }
+  }
+
+  function notifyRestDone() {
+    try { if (navigator.vibrate) navigator.vibrate([200, 100, 200]); } catch (e) {}
+    playBeep();
+    try {
+      if ('Notification' in window && Notification.permission === 'granted' && document.visibilityState === 'hidden') {
+        const n = new Notification('¡Descanso terminado!', {
+          body: 'Toca para volver a tu entrenamiento.',
+          icon: 'icons/icon-192.png',
+          tag: 'gymapp-rest',
+        });
+        n.onclick = () => { window.focus(); n.close(); };
+      }
+    } catch (e) { /* Notification no disponible */ }
+  }
+
+  function startRest(exIdx) {
+    const entry = currentSessionExercises[exIdx];
+    const seconds = entry ? Number(entry.restSeconds) : 0;
+    if (!seconds) { clearRest(); return; }
+    ensureNotificationPermission();
+    restState = { exIdx, endAt: Date.now() + seconds * 1000 };
+    if (restInterval) clearInterval(restInterval);
+    restInterval = setInterval(tickRest, 250);
+    renderRestBar();
+    persistDraft();
+  }
+
+  function adjustRest(deltaSeconds) {
+    if (!restState) return;
+    restState.endAt += deltaSeconds * 1000;
+    renderRestBar();
+    persistDraft();
+  }
+
+  function clearRest() {
+    restState = null;
+    if (restInterval) { clearInterval(restInterval); restInterval = null; }
+    renderRestBar();
+    persistDraft();
+  }
+
+  function tickRest() {
+    if (!restState) return;
+    if (restState.endAt - Date.now() <= 0) { onRestFinished(); return; }
+    renderRestBar();
+  }
+
+  function onRestFinished() {
+    notifyRestDone();
+    clearRest();
+  }
+
+  function renderRestBar() {
+    const bar = document.getElementById('rest-bar');
+    if (!bar) return;
+    if (!restState) { bar.style.display = 'none'; bar.innerHTML = ''; return; }
+    const remaining = Math.max(0, Math.ceil((restState.endAt - Date.now()) / 1000));
+    const m = Math.floor(remaining / 60);
+    const s = remaining % 60;
+    bar.style.display = 'flex';
+    bar.innerHTML = `
+      ${icon('clock', 16)}
+      <span class="rest-bar-time">${m}:${String(s).padStart(2, '0')}</span>
+      <span class="rest-bar-label">Descanso</span>
+      <button type="button" class="rest-bar-btn" onclick="Workouts.adjustRest(15)">+15s</button>
+      <button type="button" class="rest-bar-btn" onclick="Workouts.clearRest()">Saltar</button>
+    `;
   }
 
   // Devuelve los últimos sets realizados para un ejercicio (referencia "ANTERIOR")
@@ -169,15 +309,19 @@ const Workouts = (() => {
   function toggleSetDone(exIdx, setIdx) {
     const set = currentSessionExercises[exIdx].sets[setIdx];
     set.done = !set.done;
+    if (set.done) startRest(exIdx);
+    else if (restState && restState.exIdx === exIdx) clearRest();
     renderActiveSession();
   }
 
   function updateNote(exIdx, value) {
     currentSessionExercises[exIdx].note = value;
+    persistDraft();
   }
 
   function updateRest(exIdx, value) {
     currentSessionExercises[exIdx].restSeconds = Number(value);
+    persistDraft();
   }
 
   function sessionTotals() {
@@ -254,9 +398,10 @@ const Workouts = (() => {
     const container = document.getElementById('session-exercises-list');
     if (currentSessionExercises.length === 0) {
       container.innerHTML = '<p class="hint empty-hint">Añade tu primer ejercicio abajo.</p>';
-      return;
+    } else {
+      container.innerHTML = currentSessionExercises.map((entry, exIdx) => exerciseSessionCardHtml(entry, exIdx)).join('');
     }
-    container.innerHTML = currentSessionExercises.map((entry, exIdx) => exerciseSessionCardHtml(entry, exIdx)).join('');
+    persistDraft();
   }
 
   function saveCurrentWorkout() {
@@ -280,6 +425,8 @@ const Workouts = (() => {
 
     const durationMin = sessionStartAt ? Math.max(1, Math.round((Date.now() - sessionStartAt) / 60000)) : null;
     Storage.addWorkout({ date, name, entries: cleanEntries, durationMin });
+    const kebab = document.querySelector('#active-session .kebab');
+    if (kebab) kebab.removeAttribute('open');
     resetSession();
     showView('browse');
     App.refreshDashboard();
@@ -585,12 +732,26 @@ const Workouts = (() => {
     document.getElementById('exercise-list-search').addEventListener('input', renderExerciseList);
     document.getElementById('exercise-list-group-filter').addEventListener('change', renderExerciseList);
     document.getElementById('exercise-list-equipment-filter').addEventListener('change', renderExerciseList);
+
+    document.getElementById('session-kebab-summary').innerHTML = icon('moreHorizontal', 20);
+    document.getElementById('discard-session-btn').innerHTML = `${icon('trash', 15)}<span>Descartar entrenamiento</span>`;
+    document.getElementById('discard-session-btn').addEventListener('click', discardSession);
+    document.getElementById('workout-name').addEventListener('input', persistDraft);
+    document.getElementById('workout-date').addEventListener('change', persistDraft);
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState !== 'visible') return;
+      renderSessionStats();
+      if (restState && restState.endAt - Date.now() <= 0) onRestFinished();
+      else renderRestBar();
+    });
   }
 
   function init() {
     renderExerciseFilterSelects();
     bindEvents();
-    resetSession();
+    restoreDraftIfAny();
+    if (!sessionStartAt) resetSession();
     mountLogExercisePicker();
     renderHistory();
     mountProgressPicker();
@@ -600,6 +761,7 @@ const Workouts = (() => {
   return {
     init, showView, showBrowseOrResume, renderHistory, renderProgress, renderExerciseList, startFromRoutine, getLastPerformance,
     addSet, removeSet, removeExerciseFromSession, updateSet, toggleSetDone, updateNote, updateRest, deleteWorkout, removeExercise, addExerciseToSession,
+    discardSession, adjustRest, clearRest,
     epley1RM, computeWorkoutRecords, sessionVolume, sessionReps, formatDuration, sessionCardHtml,
     rerenderChartTheme,
   };

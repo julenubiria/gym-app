@@ -19,7 +19,7 @@
   } catch (e) {}
 })();
 </script>
-<link rel="stylesheet" href="css/styles.css?v=14">
+<link rel="stylesheet" href="css/styles.css?v=15">
 </head>
 <body>
 
@@ -88,6 +88,12 @@
             <button class="icon-btn" id="session-back-btn" title="Volver" aria-label="Volver"></button>
             <input type="text" id="workout-name" class="session-title-input" placeholder="Entreno">
             <button class="btn primary small" id="save-workout-btn">Terminar</button>
+            <details class="kebab">
+              <summary class="icon-btn" id="session-kebab-summary"></summary>
+              <div class="kebab-menu">
+                <button type="button" id="discard-session-btn" class="danger-item"></button>
+              </div>
+            </details>
           </div>
           <div class="session-subheader">
             <label for="workout-date" class="hint">Fecha</label>
@@ -96,6 +102,8 @@
 
           <div class="session-stats-row-plain" id="session-stats"></div>
           <div style="text-align:center;"><span id="save-workout-msg" class="msg"></span></div>
+
+          <div class="rest-bar" id="rest-bar" style="display:none;"></div>
 
           <div id="session-exercises-list"></div>
 
@@ -286,6 +294,13 @@
           <span id="backup-msg" class="msg"></span>
         </div>
 
+        <div class="panel">
+          <h2>Avisos de descanso</h2>
+          <p class="hint">Actívalos para recibir sonido, vibración y una notificación cuando termine el descanso entre series, aunque tengas la app en segundo plano.</p>
+          <button class="btn" id="enable-notifications-btn">Activar avisos</button>
+          <div><span id="notifications-status" class="hint"></span></div>
+        </div>
+
         <div class="panel danger">
           <h2>Zona peligrosa</h2>
           <button class="btn danger" id="reset-btn">Borrar todos los datos</button>
@@ -305,13 +320,13 @@
 </div>
 
 <script src="js/vendor/chart.umd.js"></script>
-<script src="js/icons.js?v=14"></script>
-<script src="js/storage.js?v=14"></script>
-<script src="js/seed-exercises.js?v=14"></script>
-<script src="js/exercise-picker.js?v=14"></script>
-<script src="js/workouts.js?v=14"></script>
-<script src="js/routines.js?v=14"></script>
-<script src="js/profile.js?v=14"></script>
-<script src="js/app.js?v=14"></script>
+<script src="js/icons.js?v=15"></script>
+<script src="js/storage.js?v=15"></script>
+<script src="js/seed-exercises.js?v=15"></script>
+<script src="js/exercise-picker.js?v=15"></script>
+<script src="js/workouts.js?v=15"></script>
+<script src="js/routines.js?v=15"></script>
+<script src="js/profile.js?v=15"></script>
+<script src="js/app.js?v=15"></script>
 </body>
 </html>

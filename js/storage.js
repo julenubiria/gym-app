@@ -8,6 +8,7 @@ const Storage = (() => {
     folders: 'gymapp_folders',
     seeded: 'gymapp_seeded_v3',
     migratedBuiltin: 'gymapp_migrated_builtin_v1',
+    measurements: 'gymapp_measurements',
   };
 
   function uid() {
@@ -166,15 +167,34 @@ const Storage = (() => {
     write(KEYS.migratedBuiltin, true);
   }
 
+  // ---- Medidas corporales ----
+  function getMeasurements() {
+    return read(KEYS.measurements, []).sort((a, b) => b.date.localeCompare(a.date));
+  }
+  function saveMeasurements(list) {
+    write(KEYS.measurements, list);
+  }
+  function addMeasurement(entry) {
+    const list = read(KEYS.measurements, []);
+    entry.id = uid();
+    list.push(entry);
+    saveMeasurements(list);
+    return entry;
+  }
+  function deleteMeasurement(id) {
+    saveMeasurements(read(KEYS.measurements, []).filter(m => m.id !== id));
+  }
+
   // ---- Backup ----
   function exportAll() {
     return {
-      version: 4,
+      version: 5,
       exportedAt: new Date().toISOString(),
       exercises: getExercises(),
       workouts: read(KEYS.workouts, []),
       routines: read(KEYS.routines, []),
       folders: getFolders(),
+      measurements: read(KEYS.measurements, []),
     };
   }
   function importAll(data) {
@@ -183,6 +203,7 @@ const Storage = (() => {
     if (Array.isArray(data.workouts)) saveWorkouts(data.workouts);
     if (Array.isArray(data.routines)) saveRoutines(data.routines);
     if (Array.isArray(data.folders)) saveFolders(data.folders);
+    if (Array.isArray(data.measurements)) saveMeasurements(data.measurements);
   }
   function resetAll() {
     Object.values(KEYS).forEach(k => localStorage.removeItem(k));
@@ -194,6 +215,7 @@ const Storage = (() => {
     getWorkouts, addWorkout, deleteWorkout,
     getRoutines, addRoutine, updateRoutine, deleteRoutine,
     getFolders, addFolder, renameFolder, deleteFolder,
+    getMeasurements, addMeasurement, deleteMeasurement,
     seedIfNeeded, exportAll, importAll, resetAll,
   };
 })();

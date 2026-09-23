@@ -239,6 +239,10 @@ const Workouts = (() => {
     return workout.entries.reduce((sum, e) => sum + e.sets.reduce((s2, s) => s2 + s.weight * s.reps, 0), 0);
   }
 
+  function sessionReps(workout) {
+    return workout.entries.reduce((sum, e) => sum + e.sets.reduce((s2, s) => s2 + s.reps, 0), 0);
+  }
+
   function sessionCardHtml(w, allWorkouts, exercises) {
     const { count: records, marks } = computeWorkoutRecords(w, allWorkouts);
     const volume = sessionVolume(w);
@@ -519,7 +523,7 @@ const Workouts = (() => {
   return {
     init, initLogForm, renderHistory, renderProgress, renderExerciseList, startFromRoutine, getLastPerformance,
     addSet, removeSet, removeExerciseFromSession, updateSet, deleteWorkout, removeExercise, addExerciseToSession,
-    renderStartFromRoutineSelect, epley1RM, computeWorkoutRecords, sessionVolume, formatDuration, sessionCardHtml,
+    renderStartFromRoutineSelect, epley1RM, computeWorkoutRecords, sessionVolume, sessionReps, formatDuration, sessionCardHtml,
     rerenderChartTheme,
   };
 })();

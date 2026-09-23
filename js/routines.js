@@ -146,7 +146,8 @@ const Routines = (() => {
   function startRoutine(id) {
     const routine = Storage.getRoutines().find(r => r.id === id);
     if (!routine) return;
-    App.switchPage('log');
+    App.switchPage('workout');
+    App.switchWorkoutSegment('log');
     Workouts.startFromRoutine(routine);
   }
 
@@ -210,7 +211,7 @@ const Routines = (() => {
     document.getElementById('routines-browse').style.display = 'none';
     document.getElementById('routine-editor').style.display = 'block';
     document.getElementById('app').classList.add('wide');
-    document.querySelector('#page-routines .page-title').style.display = 'none';
+    document.querySelector('#page-workout .page-title').style.display = 'none';
     renderFolderSelect();
     renderEditorExercises();
     refreshPicker();
@@ -220,7 +221,7 @@ const Routines = (() => {
     document.getElementById('routine-editor').style.display = 'none';
     document.getElementById('routines-browse').style.display = 'block';
     document.getElementById('app').classList.remove('wide');
-    document.querySelector('#page-routines .page-title').style.display = '';
+    document.querySelector('#page-workout .page-title').style.display = '';
     renderGroups();
   }
 
@@ -228,7 +229,7 @@ const Routines = (() => {
     document.getElementById('routine-editor').style.display = 'none';
     document.getElementById('routines-browse').style.display = 'block';
     document.getElementById('app').classList.remove('wide');
-    document.querySelector('#page-routines .page-title').style.display = '';
+    document.querySelector('#page-workout .page-title').style.display = '';
     renderGroups();
   }
 

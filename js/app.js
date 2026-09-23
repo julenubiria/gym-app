@@ -2,10 +2,8 @@
 
 const NAV_ITEMS = [
   { page: 'dashboard', icon: 'home', label: 'Inicio' },
-  { page: 'routines', icon: 'routines', label: 'Rutinas' },
-  { page: 'log', icon: 'plusCircle', label: 'Registrar' },
-  { page: 'progress', icon: 'trending', label: 'Progreso' },
-  { page: 'exercises', icon: 'dumbbell', label: 'Ejercicios' },
+  { page: 'workout', icon: 'dumbbell', label: 'Entrenamiento' },
+  { page: 'profile', icon: 'user', label: 'Perfil' },
 ];
 
 const App = (() => {
@@ -39,7 +37,13 @@ const App = (() => {
     });
     const importLabel = document.querySelector('label[for="import-file"]');
     if (importLabel) importLabel.innerHTML = `${icon('upload', 16)}<span>Importar datos</span>`;
+    const calPrev = document.getElementById('calendar-prev-btn');
+    const calNext = document.getElementById('calendar-next-btn');
+    if (calPrev) calPrev.innerHTML = icon('chevronLeft', 18);
+    if (calNext) calNext.innerHTML = icon('chevronRight', 18);
   }
+
+  // ---------------- Navegación de páginas ----------------
 
   function switchPage(pageName) {
     document.querySelectorAll('[data-page]').forEach(el => el.classList.toggle('active', el.dataset.page === pageName));
@@ -47,30 +51,42 @@ const App = (() => {
     window.scrollTo(0, 0);
 
     if (pageName === 'dashboard') refreshDashboard();
-    if (pageName === 'routines') Routines.showBrowse();
-    if (pageName === 'exercises') Workouts.renderExerciseList();
-    if (pageName === 'progress') refreshProgressSegment();
+    if (pageName === 'workout') refreshActiveWorkoutSegment();
+    if (pageName === 'profile') refreshActiveProfileSegment();
   }
 
-  function refreshProgressSegment() {
-    const activeBtn = document.querySelector('#progress-segmented .segmented-btn.active');
-    const seg = activeBtn ? activeBtn.dataset.seg : 'history';
-    if (seg === 'history') Workouts.renderHistory();
+  // ---- Entrenamiento: Registrar | Rutinas | Ejercicios ----
+  function switchWorkoutSegment(seg) {
+    document.querySelectorAll('#workout-segmented .segmented-btn').forEach(b => b.classList.toggle('active', b.dataset.seg === seg));
+    document.querySelectorAll('.workout-seg').forEach(p => p.classList.toggle('active', p.id === `workout-seg-${seg}`));
+    if (seg === 'routines') Routines.showBrowse();
+    if (seg === 'exercises') Workouts.renderExerciseList();
+  }
+  function refreshActiveWorkoutSegment() {
+    const activeBtn = document.querySelector('#workout-segmented .segmented-btn.active');
+    switchWorkoutSegment(activeBtn ? activeBtn.dataset.seg : 'log');
   }
 
-  function switchProgressSegment(seg) {
-    document.querySelectorAll('#progress-segmented .segmented-btn').forEach(b => b.classList.toggle('active', b.dataset.seg === seg));
-    document.getElementById('progress-seg-history').classList.toggle('active', seg === 'history');
-    document.getElementById('progress-seg-exercise').classList.toggle('active', seg === 'exercise');
-    if (seg === 'history') Workouts.renderHistory();
+  // ---- Perfil: Información | Estadísticas | Medidas | Calendario ----
+  function switchProfileSegment(seg) {
+    document.querySelectorAll('#profile-segmented .segmented-btn').forEach(b => b.classList.toggle('active', b.dataset.seg === seg));
+    document.querySelectorAll('.profile-seg').forEach(p => p.classList.toggle('active', p.id === `profile-seg-${seg}`));
+    if (typeof Profile !== 'undefined') Profile.onEnterSegment(seg);
+  }
+  function refreshActiveProfileSegment() {
+    const activeBtn = document.querySelector('#profile-segmented .segmented-btn.active');
+    switchProfileSegment(activeBtn ? activeBtn.dataset.seg : 'info');
   }
 
   function bindNav() {
     document.querySelectorAll('[data-page]').forEach(btn => {
       btn.addEventListener('click', () => switchPage(btn.dataset.page));
     });
-    document.querySelectorAll('#progress-segmented .segmented-btn').forEach(btn => {
-      btn.addEventListener('click', () => switchProgressSegment(btn.dataset.seg));
+    document.querySelectorAll('#workout-segmented .segmented-btn').forEach(btn => {
+      btn.addEventListener('click', () => switchWorkoutSegment(btn.dataset.seg));
+    });
+    document.querySelectorAll('#profile-segmented .segmented-btn').forEach(btn => {
+      btn.addEventListener('click', () => switchProfileSegment(btn.dataset.seg));
     });
   }
 
@@ -87,21 +103,6 @@ const App = (() => {
       d.setDate(d.getDate() - 1);
     }
     return streak;
-  }
-
-  function renderHeatmap(workoutDateSet) {
-    const container = document.getElementById('streak-heatmap');
-    const days = 28;
-    const cells = [];
-    const today = new Date();
-    for (let i = days - 1; i >= 0; i--) {
-      const d = new Date(today);
-      d.setDate(d.getDate() - i);
-      const dateStr = isoDate(d);
-      const filled = workoutDateSet.has(dateStr);
-      cells.push(`<div class="heat-cell ${filled ? 'filled' : ''}" title="${dateStr}"></div>`);
-    }
-    container.innerHTML = cells.join('');
   }
 
   function refreshDashboard() {
@@ -140,15 +141,7 @@ const App = (() => {
       </div>
     `;
 
-    document.getElementById('streak-label').textContent = streak > 0
-      ? `¡${streak} día${streak === 1 ? '' : 's'} seguidos, sigue así!`
-      : 'Entrena hoy para empezar una racha';
-    renderHeatmap(workoutDateSet);
-
-    const recent = workouts.slice(0, 3);
-    document.getElementById('dashboard-recent-workouts').innerHTML = recent.length
-      ? recent.map(w => Workouts.sessionCardHtml(w, workouts, exercises)).join('')
-      : '<p class="hint empty-hint">Todavía no has registrado entrenamientos. ¡Empieza en "Registrar"!</p>';
+    Workouts.renderHistory();
   }
 
   function initSettingsForm() {
@@ -183,7 +176,7 @@ const App = (() => {
     });
 
     document.getElementById('reset-btn').addEventListener('click', () => {
-      if (!confirm('Esto borrará TODOS tus datos (entrenamientos, rutinas, ejercicios personalizados). ¿Seguro?')) return;
+      if (!confirm('Esto borrará TODOS tus datos (entrenamientos, rutinas, ejercicios personalizados, medidas). ¿Seguro?')) return;
       if (!confirm('Última confirmación: se perderá todo de forma permanente. ¿Continuar?')) return;
       Storage.resetAll();
       location.reload();
@@ -206,6 +199,7 @@ const App = (() => {
       try { localStorage.setItem('gymapp_theme', next); } catch (e) {}
       applyIcon();
       if (typeof Workouts !== 'undefined' && Workouts.rerenderChartTheme) Workouts.rerenderChartTheme();
+      if (typeof Profile !== 'undefined' && Profile.rerenderChartsTheme) Profile.rerenderChartsTheme();
     }));
   }
 
@@ -217,6 +211,7 @@ const App = (() => {
     initTheme();
     Workouts.init();
     Routines.init();
+    Profile.init();
     initSettingsForm();
     refreshDashboard();
     registerServiceWorker();
@@ -244,7 +239,7 @@ const App = (() => {
     }).catch(() => {});
   }
 
-  return { init, switchPage, refreshDashboard };
+  return { init, switchPage, switchWorkoutSegment, switchProfileSegment, refreshDashboard };
 })();
 
 document.addEventListener('DOMContentLoaded', App.init);

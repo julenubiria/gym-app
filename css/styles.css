@@ -213,8 +213,54 @@ body {
   cursor: pointer;
 }
 .segmented-btn.active { background: var(--accent); color: var(--btn-primary-text); }
-.progress-seg { display: none; }
-.progress-seg.active { display: block; }
+.segmented-btn { white-space: nowrap; }
+
+.segmented-scroll {
+  display: flex;
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.segmented-scroll::-webkit-scrollbar { display: none; }
+.segmented-scroll .segmented-btn { flex-shrink: 0; }
+
+.workout-seg, .profile-seg, .info-mode { display: none; }
+.workout-seg.active, .profile-seg.active, .info-mode.active { display: block; }
+
+/* Calendario de entrenamientos */
+.calendar-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.calendar-header strong { text-transform: capitalize; font-size: 0.95rem; }
+.calendar-weekdays, .calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
+.calendar-weekdays { margin-bottom: 6px; }
+.calendar-weekdays span { text-align: center; font-size: 0.7rem; color: var(--text-dim); font-weight: 700; }
+.cal-cell {
+  aspect-ratio: 1;
+  border-radius: var(--radius-sm);
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.cal-cell.empty { background: transparent; border-color: transparent; cursor: default; }
+.cal-cell.trained { background: var(--accent); border-color: var(--accent); color: var(--btn-primary-text); }
+.cal-cell.today:not(.trained) { border-color: var(--accent); color: var(--accent); }
+.calendar-day-detail { margin-top: 12px; text-transform: capitalize; }
+
+/* Medidas corporales */
+.measurement-card { padding: 12px 14px; }
+.measurement-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.measurement-values { display: flex; flex-wrap: wrap; gap: 14px; font-size: 0.85rem; color: var(--text-dim); }
+.measurement-values strong { color: var(--text); }
 
 h1 { font-size: 1.3rem; margin: 4px 0 14px; }
 h2 { font-size: 1.02rem; margin: 0 0 12px; letter-spacing: -0.01em; }
@@ -258,23 +304,6 @@ h3 { font-size: 0.85rem; color: var(--text-dim); text-transform: uppercase; lett
 .card-label { display: flex; align-items: center; gap: 5px; font-size: 0.7rem; color: var(--text-dim); font-weight: 600; }
 .card-value { font-size: 1.5rem; font-weight: 800; color: var(--text); line-height: 1.2; }
 .card-sub { font-size: 0.68rem; color: var(--text-dim); }
-
-/* Heatmap de actividad */
-.heatmap {
-  display: grid;
-  grid-template-columns: repeat(14, 1fr);
-  gap: 4px;
-}
-.heat-cell {
-  aspect-ratio: 1;
-  border-radius: 4px;
-  background: var(--bg-card);
-  border: 1px solid var(--border);
-}
-.heat-cell.filled {
-  background: var(--accent);
-  border-color: var(--accent);
-}
 
 .form-row { margin-bottom: 10px; display: flex; flex-direction: column; gap: 5px; }
 .form-row label { font-size: 0.8rem; color: var(--text-dim); font-weight: 600; }
@@ -666,6 +695,5 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
   .form-row-pair { grid-template-columns: 1fr; }
   .set-row { grid-template-columns: 22px 1fr 1fr 22px; }
   .list-item { flex-direction: column; align-items: stretch; }
-  .heatmap { grid-template-columns: repeat(14, 1fr); }
   .ex-picker-library .ex-picker-filters { flex-direction: column; }
 }

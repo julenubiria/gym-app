@@ -20,6 +20,9 @@ const ICON_PATHS = {
   x: '<line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>',
   flame: '<path d="M12 2c1 3-3 4-3 8a3 3 0 0 0 6 0c0-1-1-2-1-3 2 1 3 3 3 5a5 5 0 0 1-10 0c0-4 3-6 5-10z"/>',
   award: '<circle cx="12" cy="8" r="6"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>',
+  user: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  chevronRight: '<polyline points="9 18 15 12 9 6"/>',
+  ruler: '<path d="M3 8h18v8H3z"/><path d="M7 8v3"/><path d="M11 8v3"/><path d="M15 8v3"/><path d="M19 8v3"/>',
 };
 
 function icon(name, size) {

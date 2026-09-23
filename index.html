@@ -19,7 +19,7 @@
   } catch (e) {}
 })();
 </script>
-<link rel="stylesheet" href="css/styles.css?v=11">
+<link rel="stylesheet" href="css/styles.css?v=12">
 </head>
 <body>
 
@@ -30,10 +30,8 @@
     <div class="sidebar-brand"><span class="brand-mark"></span> Julen Gym App</div>
     <nav class="sidebar-nav" id="sidebar-nav">
       <button class="nav-item active" data-page="dashboard"></button>
-      <button class="nav-item" data-page="routines"></button>
-      <button class="nav-item" data-page="log"></button>
-      <button class="nav-item" data-page="progress"></button>
-      <button class="nav-item" data-page="exercises"></button>
+      <button class="nav-item" data-page="workout"></button>
+      <button class="nav-item" data-page="profile"></button>
     </nav>
     <div class="sidebar-footer">
       <button class="nav-item" data-page="settings"></button>
@@ -54,153 +52,214 @@
 
     <main id="app">
 
-      <!-- INICIO -->
+      <!-- INICIO: resumen + feed completo de entrenamientos -->
       <section id="page-dashboard" class="page active">
         <div class="grid cards" id="dashboard-cards"></div>
-
-        <div class="panel">
-          <div class="panel-header-row">
-            <h2>Actividad</h2>
-            <span class="hint" id="streak-label"></span>
-          </div>
-          <div id="streak-heatmap" class="heatmap"></div>
-        </div>
-
-        <div class="panel">
-          <h2>Últimos entrenamientos</h2>
-          <div id="dashboard-recent-workouts" class="session-list"></div>
-        </div>
+        <div id="workout-history-list" class="session-list"></div>
       </section>
 
-      <!-- REGISTRAR -->
-      <section id="page-log" class="page">
-        <h1 class="page-title">Registrar</h1>
-
-        <div class="panel" id="quick-start-panel" style="display:none;">
-          <h2>Empezar desde una rutina</h2>
-          <div id="quick-start-routines" class="quick-start-routines"></div>
+      <!-- ENTRENAMIENTO: Registrar | Rutinas | Ejercicios -->
+      <section id="page-workout" class="page">
+        <h1 class="page-title">Entrenamiento</h1>
+        <div class="segmented segmented-scroll" id="workout-segmented">
+          <button class="segmented-btn active" data-seg="log">Registrar</button>
+          <button class="segmented-btn" data-seg="routines">Rutinas</button>
+          <button class="segmented-btn" data-seg="exercises">Ejercicios</button>
         </div>
 
-        <div class="panel">
-          <div class="form-row-pair">
-            <div class="form-row">
-              <label>Fecha</label>
-              <input type="date" id="workout-date">
-            </div>
-            <div class="form-row">
-              <label>Nombre de la sesión</label>
-              <input type="text" id="workout-name" placeholder="Ej: Empuje, Pierna, Full Body...">
-            </div>
+        <!-- Registrar -->
+        <div id="workout-seg-log" class="workout-seg active">
+          <div class="panel" id="quick-start-panel" style="display:none;">
+            <h2>Empezar desde una rutina</h2>
+            <div id="quick-start-routines" class="quick-start-routines"></div>
           </div>
-        </div>
 
-        <div id="current-session-exercises"></div>
-
-        <div class="panel">
-          <h2>Añadir ejercicio</h2>
-          <div id="log-exercise-picker"></div>
-          <div class="form-grid" id="inline-new-exercise" style="display:none;">
-            <input type="text" id="inline-ex-name" placeholder="Nombre del ejercicio">
-            <select id="inline-ex-group"></select>
-            <select id="inline-ex-equipment"></select>
-            <button class="btn small" id="inline-ex-save-btn">Crear y añadir</button>
-          </div>
-        </div>
-
-        <button class="btn primary btn-block" id="save-workout-btn">Guardar sesión</button>
-        <div style="text-align:center;"><span id="save-workout-msg" class="msg"></span></div>
-      </section>
-
-      <!-- RUTINAS -->
-      <section id="page-routines" class="page">
-        <h1 class="page-title">Rutinas</h1>
-
-        <div id="routines-browse">
-          <div class="routines-toolbar">
-            <button class="btn primary small" id="new-routine-btn">+ Nueva rutina</button>
-            <button class="btn small ghost" id="new-folder-btn">+ Nueva carpeta</button>
-          </div>
-          <div id="routines-groups"></div>
-        </div>
-
-        <div id="routine-editor" style="display:none;">
-          <div class="routine-editor-header">
-            <button class="btn small ghost" id="routine-editor-back-btn">Volver</button>
-            <h2 id="routine-editor-title">Nueva rutina</h2>
-            <button class="btn primary small" id="save-routine-btn">Guardar</button>
-          </div>
-          <span id="save-routine-msg" class="msg"></span>
-
-          <div class="routine-editor-grid">
-            <div class="routine-editor-main">
-              <input type="text" id="routine-name" placeholder="Título de la rutina" class="routine-title-input">
-              <select id="routine-folder-select" class="routine-folder-select"><option value="">Sin carpeta</option></select>
-              <div id="routine-editor-exercises"></div>
-            </div>
-
-            <div class="routine-editor-side">
-              <div class="panel routine-summary">
-                <h3>Resumen</h3>
-                <div class="stats-row" id="routine-summary-stats"></div>
-              </div>
-              <div class="panel routine-library">
-                <div class="panel-header-row">
-                  <h3>Biblioteca</h3>
-                  <button class="btn small ghost" id="toggle-new-exercise-routine-btn">+ Ejercicio nuevo</button>
-                </div>
-                <div class="form-grid" id="inline-new-exercise-routine" style="display:none;">
-                  <input type="text" id="inline-ex-routine-name" placeholder="Nombre del ejercicio">
-                  <select id="inline-ex-routine-group"></select>
-                  <select id="inline-ex-routine-equipment"></select>
-                  <button class="btn small primary" id="inline-ex-routine-save-btn">Crear y añadir</button>
-                </div>
-                <div id="routine-exercise-picker"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- PROGRESO (historial + por ejercicio) -->
-      <section id="page-progress" class="page">
-        <h1 class="page-title">Progreso</h1>
-        <div class="segmented" id="progress-segmented">
-          <button class="segmented-btn active" data-seg="history">Historial</button>
-          <button class="segmented-btn" data-seg="exercise">Por ejercicio</button>
-        </div>
-
-        <div id="progress-seg-history" class="progress-seg active">
-          <div id="workout-history-list" class="session-list"></div>
-        </div>
-
-        <div id="progress-seg-exercise" class="progress-seg">
           <div class="panel">
-            <div id="progress-selected" class="progress-selected" style="display:none;"></div>
-            <div id="progress-picker"></div>
-            <div id="progress-content" style="display:none;">
-              <div class="stats-row" id="progress-stats"></div>
-              <div class="chart-wrap"><canvas id="progress-chart"></canvas></div>
+            <div class="form-row-pair">
+              <div class="form-row">
+                <label>Fecha</label>
+                <input type="date" id="workout-date">
+              </div>
+              <div class="form-row">
+                <label>Nombre de la sesión</label>
+                <input type="text" id="workout-name" placeholder="Ej: Empuje, Pierna, Full Body...">
+              </div>
             </div>
+          </div>
+
+          <div id="current-session-exercises"></div>
+
+          <div class="panel">
+            <h2>Añadir ejercicio</h2>
+            <div id="log-exercise-picker"></div>
+            <div class="form-grid" id="inline-new-exercise" style="display:none;">
+              <input type="text" id="inline-ex-name" placeholder="Nombre del ejercicio">
+              <select id="inline-ex-group"></select>
+              <select id="inline-ex-equipment"></select>
+              <button class="btn small" id="inline-ex-save-btn">Crear y añadir</button>
+            </div>
+          </div>
+
+          <button class="btn primary btn-block" id="save-workout-btn">Guardar sesión</button>
+          <div style="text-align:center;"><span id="save-workout-msg" class="msg"></span></div>
+        </div>
+
+        <!-- Rutinas -->
+        <div id="workout-seg-routines" class="workout-seg">
+          <div id="routines-browse">
+            <div class="routines-toolbar">
+              <button class="btn primary small" id="new-routine-btn">+ Nueva rutina</button>
+              <button class="btn small ghost" id="new-folder-btn">+ Nueva carpeta</button>
+            </div>
+            <div id="routines-groups"></div>
+          </div>
+
+          <div id="routine-editor" style="display:none;">
+            <div class="routine-editor-header">
+              <button class="btn small ghost" id="routine-editor-back-btn">Volver</button>
+              <h2 id="routine-editor-title">Nueva rutina</h2>
+              <button class="btn primary small" id="save-routine-btn">Guardar</button>
+            </div>
+            <span id="save-routine-msg" class="msg"></span>
+
+            <div class="routine-editor-grid">
+              <div class="routine-editor-main">
+                <input type="text" id="routine-name" placeholder="Título de la rutina" class="routine-title-input">
+                <select id="routine-folder-select" class="routine-folder-select"><option value="">Sin carpeta</option></select>
+                <div id="routine-editor-exercises"></div>
+              </div>
+
+              <div class="routine-editor-side">
+                <div class="panel routine-summary">
+                  <h3>Resumen</h3>
+                  <div class="stats-row" id="routine-summary-stats"></div>
+                </div>
+                <div class="panel routine-library">
+                  <div class="panel-header-row">
+                    <h3>Biblioteca</h3>
+                    <button class="btn small ghost" id="toggle-new-exercise-routine-btn">+ Ejercicio nuevo</button>
+                  </div>
+                  <div class="form-grid" id="inline-new-exercise-routine" style="display:none;">
+                    <input type="text" id="inline-ex-routine-name" placeholder="Nombre del ejercicio">
+                    <select id="inline-ex-routine-group"></select>
+                    <select id="inline-ex-routine-equipment"></select>
+                    <button class="btn small primary" id="inline-ex-routine-save-btn">Crear y añadir</button>
+                  </div>
+                  <div id="routine-exercise-picker"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ejercicios -->
+        <div id="workout-seg-exercises" class="workout-seg">
+          <div class="panel">
+            <div class="form-row inline">
+              <input type="text" id="new-exercise-name" placeholder="Nombre del ejercicio">
+              <select id="new-exercise-group"></select>
+              <select id="new-exercise-equipment"></select>
+              <button class="btn" id="add-new-exercise-btn">+ Añadir</button>
+            </div>
+            <div class="form-row inline">
+              <input type="text" id="exercise-list-search" placeholder="Buscar ejercicio...">
+              <select id="exercise-list-group-filter"><option value="">Todos los grupos</option></select>
+              <select id="exercise-list-equipment-filter"><option value="">Todo el material</option></select>
+            </div>
+            <div id="exercise-list" class="session-list"></div>
           </div>
         </div>
       </section>
 
-      <!-- EJERCICIOS -->
-      <section id="page-exercises" class="page">
-        <h1 class="page-title">Ejercicios</h1>
-        <div class="panel">
-          <div class="form-row inline">
-            <input type="text" id="new-exercise-name" placeholder="Nombre del ejercicio">
-            <select id="new-exercise-group"></select>
-            <select id="new-exercise-equipment"></select>
-            <button class="btn" id="add-new-exercise-btn">+ Añadir</button>
+      <!-- PERFIL: Información | Estadísticas | Medidas | Calendario -->
+      <section id="page-profile" class="page">
+        <h1 class="page-title">Perfil</h1>
+        <div class="segmented segmented-scroll" id="profile-segmented">
+          <button class="segmented-btn active" data-seg="info">Información</button>
+          <button class="segmented-btn" data-seg="stats">Estadísticas</button>
+          <button class="segmented-btn" data-seg="measurements">Medidas</button>
+          <button class="segmented-btn" data-seg="calendar">Calendario</button>
+        </div>
+
+        <!-- Información -->
+        <div id="profile-seg-info" class="profile-seg active">
+          <div class="segmented" id="info-mode-segmented">
+            <button class="segmented-btn active" data-mode="general">General</button>
+            <button class="segmented-btn" data-mode="exercise">Por ejercicio</button>
           </div>
-          <div class="form-row inline">
-            <input type="text" id="exercise-list-search" placeholder="Buscar ejercicio...">
-            <select id="exercise-list-group-filter"><option value="">Todos los grupos</option></select>
-            <select id="exercise-list-equipment-filter"><option value="">Todo el material</option></select>
+
+          <div id="info-mode-general" class="info-mode active">
+            <div class="panel">
+              <div class="segmented" id="metric-segmented">
+                <button class="segmented-btn active" data-metric="duration">Duración</button>
+                <button class="segmented-btn" data-metric="volume">Volumen</button>
+                <button class="segmented-btn" data-metric="reps">Repeticiones</button>
+              </div>
+              <div id="general-chart-empty" class="hint empty-hint">Registra alguna sesión para ver tu evolución.</div>
+              <div class="chart-wrap" id="general-chart-wrap" style="display:none;"><canvas id="general-chart"></canvas></div>
+            </div>
           </div>
-          <div id="exercise-list" class="session-list"></div>
+
+          <div id="info-mode-exercise" class="info-mode">
+            <div class="panel">
+              <div id="progress-selected" class="progress-selected" style="display:none;"></div>
+              <div id="progress-picker"></div>
+              <div id="progress-content" style="display:none;">
+                <div class="stats-row" id="progress-stats"></div>
+                <div class="chart-wrap"><canvas id="progress-chart"></canvas></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Estadísticas -->
+        <div id="profile-seg-stats" class="profile-seg">
+          <div class="stats-row" id="stats-grid"></div>
+        </div>
+
+        <!-- Medidas -->
+        <div id="profile-seg-measurements" class="profile-seg">
+          <div class="panel">
+            <h2>Añadir medida</h2>
+            <div class="form-row-pair">
+              <div class="form-row">
+                <label>Fecha</label>
+                <input type="date" id="measure-date">
+              </div>
+              <div class="form-row">
+                <label>Peso (kg)</label>
+                <input type="number" step="0.1" min="0" id="measure-weight" placeholder="kg">
+              </div>
+            </div>
+            <button class="btn small ghost" id="toggle-more-measures-btn">+ Más medidas</button>
+            <div class="form-grid" id="more-measures" style="display:none;">
+              <input type="number" step="0.1" min="0" id="measure-waist" placeholder="Cintura (cm)">
+              <input type="number" step="0.1" min="0" id="measure-chest" placeholder="Pecho (cm)">
+              <input type="number" step="0.1" min="0" id="measure-arm" placeholder="Brazo (cm)">
+              <input type="number" step="0.1" min="0" id="measure-hip" placeholder="Cadera (cm)">
+            </div>
+            <button class="btn primary" id="save-measurement-btn">Guardar</button>
+            <span id="measurement-msg" class="msg"></span>
+          </div>
+          <div class="panel" id="measurement-chart-panel" style="display:none;">
+            <h2>Peso a lo largo del tiempo</h2>
+            <div class="chart-wrap"><canvas id="measurement-chart"></canvas></div>
+          </div>
+          <div id="measurements-list" class="session-list"></div>
+        </div>
+
+        <!-- Calendario -->
+        <div id="profile-seg-calendar" class="profile-seg">
+          <div class="panel">
+            <div class="calendar-header">
+              <button class="icon-btn" id="calendar-prev-btn"></button>
+              <strong id="calendar-label"></strong>
+              <button class="icon-btn" id="calendar-next-btn"></button>
+            </div>
+            <div class="calendar-weekdays"><span>L</span><span>M</span><span>X</span><span>J</span><span>V</span><span>S</span><span>D</span></div>
+            <div class="calendar-grid" id="calendar-grid"></div>
+            <div id="calendar-day-detail" class="hint calendar-day-detail"></div>
+          </div>
         </div>
       </section>
 
@@ -227,22 +286,21 @@
     <!-- BOTTOM NAV (móvil) -->
     <nav class="bottom-nav" id="bottom-nav">
       <button class="bottom-nav-item active" data-page="dashboard"></button>
-      <button class="bottom-nav-item" data-page="routines"></button>
-      <button class="bottom-nav-item bottom-nav-primary" data-page="log"></button>
-      <button class="bottom-nav-item" data-page="progress"></button>
-      <button class="bottom-nav-item" data-page="exercises"></button>
+      <button class="bottom-nav-item bottom-nav-primary" data-page="workout"></button>
+      <button class="bottom-nav-item" data-page="profile"></button>
     </nav>
 
   </div>
 </div>
 
 <script src="js/vendor/chart.umd.js"></script>
-<script src="js/icons.js?v=11"></script>
-<script src="js/storage.js?v=11"></script>
-<script src="js/seed-exercises.js?v=11"></script>
-<script src="js/exercise-picker.js?v=11"></script>
-<script src="js/workouts.js?v=11"></script>
-<script src="js/routines.js?v=11"></script>
-<script src="js/app.js?v=11"></script>
+<script src="js/icons.js?v=12"></script>
+<script src="js/storage.js?v=12"></script>
+<script src="js/seed-exercises.js?v=12"></script>
+<script src="js/exercise-picker.js?v=12"></script>
+<script src="js/workouts.js?v=12"></script>
+<script src="js/routines.js?v=12"></script>
+<script src="js/profile.js?v=12"></script>
+<script src="js/app.js?v=12"></script>
 </body>
 </html>
